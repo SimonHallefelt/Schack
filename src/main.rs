@@ -1,8 +1,6 @@
-
-
 mod board;
 
 fn main() {
     println!("Hello, world!");
-    board::new_board();
+    let board = board::Board::new_board(1);
 }
