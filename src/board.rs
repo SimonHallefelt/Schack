@@ -38,10 +38,10 @@ impl Board {
 
     pub fn new_board(starting_player: i8) -> Board {
         let mut board = vec![vec![0; 8]; 8];
-        board[0] = vec![4,2,3,6,5,3,2,4];
+        board[0] = vec![4,2,3,5,6,3,2,4];
         board[1] = vec![1; 8];
         board[6] = vec![-1; 8];
-        board[7] = vec![-4,-2,-3,-6,-5,-3,-2,-4];
+        board[7] = vec![-4,-2,-3,-5,-6,-3,-2,-4];
         print_board(&board);
 
         Board {
@@ -402,7 +402,7 @@ fn draw(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> 
 }
 
 fn print_board(board: &Vec<Vec<i8>>) {
-    for r in board {
+    for r in board.iter().rev() {
         for i in r {
             if *i < 0 {
                 print!("{} ", i);
@@ -423,14 +423,14 @@ mod tests {
     #[test]
     fn test_new_board() {
         let board = Board::new_board(1).board;
-        assert_eq!(board[0], vec![4,2,3,6,5,3,2,4]);
+        assert_eq!(board[0], vec![4,2,3,5,6,3,2,4]);
         assert_eq!(board[1], vec![1; 8]);
         assert_eq!(board[2], vec![0; 8]);
         assert_eq!(board[3], vec![0; 8]);
         assert_eq!(board[4], vec![0; 8]);
         assert_eq!(board[5], vec![0; 8]);
         assert_eq!(board[6], vec![-1; 8]);
-        assert_eq!(board[7], vec![-4,-2,-3,-6,-5,-3,-2,-4]);
+        assert_eq!(board[7], vec![-4,-2,-3,-5,-6,-3,-2,-4]);
     }
 
     #[test]
@@ -488,7 +488,7 @@ mod tests {
     fn legal_knight_move_1() {
         let mut board = Board::new_board(1);
         assert_eq!(board.update_board(vec![0, 1], vec![2, 0], 0), 0);
-        assert_eq!(board.board[0], vec![4,0,3,6,5,3,2,4]);
+        assert_eq!(board.board[0], vec![4,0,3,5,6,3,2,4]);
         assert_eq!(board.board[1], vec![1; 8]);
         assert_eq!(board.board[2], vec![2,0,0,0,0,0,0,0]);
     }
@@ -509,7 +509,7 @@ mod tests {
         assert_eq!(board.update_board(vec![1, 3], vec![2, 3], 0), 0);
         assert_eq!(board.update_board(vec![6, 3], vec![5, 3], 0), 0);
         assert_eq!(board.update_board(vec![0, 2], vec![4, 6], 0), 0);
-        assert_eq!(board.board[0], vec![4,2,0,6,5,3,2,4]);
+        assert_eq!(board.board[0], vec![4,2,0,5,6,3,2,4]);
         assert_eq!(board.board[1], vec![1,1,1,0,1,1,1,1]);
         assert_eq!(board.board[2], vec![0,0,0,1,0,0,0,0]);
         assert_eq!(board.board[3], vec![0,0,0,0,0,0,0,0]);
@@ -528,7 +528,7 @@ mod tests {
         assert_eq!(board.update_board(vec![1, 4], vec![2, 4], 0), 0);
         assert_eq!(board.update_board(vec![6, 3], vec![5, 3], 0), 0);
         assert_eq!(board.update_board(vec![0, 5], vec![4, 1], 0), 0);
-        assert_eq!(board.board[0], vec![4,2,3,6,5,0,2,4]);
+        assert_eq!(board.board[0], vec![4,2,3,5,6,0,2,4]);
         assert_eq!(board.board[1], vec![1,1,1,1,0,1,1,1]);
         assert_eq!(board.board[2], vec![0,0,0,0,1,0,0,0]);
         assert_eq!(board.board[3], vec![0,0,0,0,0,0,0,0]);
@@ -543,7 +543,7 @@ mod tests {
         print_board(&board.board);
         assert_eq!(board.update_board(vec![0, 0], vec![2, 0], 0), 0);
         print_board(&board.board);
-        assert_eq!(board.board[0], vec![0,2,3,6,5,3,2,4]);
+        assert_eq!(board.board[0], vec![0,2,3,5,6,3,2,4]);
         assert_eq!(board.board[1], vec![0,1,1,1,1,1,1,1]);
         assert_eq!(board.board[2], vec![4,0,0,0,0,0,0,0]);
         assert_eq!(board.board[3], vec![1,0,0,0,0,0,0,0]);
@@ -552,26 +552,26 @@ mod tests {
     #[test]
     fn legal_queen_move_1() {
         let mut board = Board::new_board(1);
-        assert_eq!(board.update_board(vec![1, 3], vec![2, 3], 0), 0);
+        assert_eq!(board.update_board(vec![1, 4], vec![2, 4], 0), 0);
         assert_eq!(board.update_board(vec![6, 3], vec![5, 3], 0), 0);
-        assert_eq!(board.update_board(vec![0, 4], vec![3, 1], 0), 0);
+        assert_eq!(board.update_board(vec![0, 3], vec![3, 6], 0), 0);
         assert_eq!(board.update_board(vec![6, 4], vec![5, 4], 0), 0);
-        assert_eq!(board.update_board(vec![3, 1], vec![3, 5], 0), 0);
-        assert_eq!(board.board[0], vec![4,2,3,6,0,3,2,4]);
-        assert_eq!(board.board[1], vec![1,1,1,0,1,1,1,1]);
-        assert_eq!(board.board[2], vec![0,0,0,1,0,0,0,0]);
-        assert_eq!(board.board[3], vec![0,0,0,0,0,5,0,0]);
+        assert_eq!(board.update_board(vec![3, 6], vec![3, 2], 0), 0);
+        assert_eq!(board.board[0], vec![4,2,3,0,6,3,2,4]);
+        assert_eq!(board.board[1], vec![1,1,1,1,0,1,1,1]);
+        assert_eq!(board.board[2], vec![0,0,0,0,1,0,0,0]);
+        assert_eq!(board.board[3], vec![0,0,5,0,0,0,0,0]);
     }
 
     #[test]
     fn legal_king_move_1() {
         let mut board = Board::new_board(1);
-        assert_eq!(board.update_board(vec![1, 3], vec![2, 3], 0), 0);
-        assert_eq!(board.update_board(vec![6, 3], vec![5, 3], 0), 0);
-        assert_eq!(board.update_board(vec![0, 3], vec![1, 3], 0), 0);
-        assert_eq!(board.board[0], vec![4,2,3,0,5,3,2,4]);
-        assert_eq!(board.board[1], vec![1,1,1,6,1,1,1,1]);
-        assert_eq!(board.board[2], vec![0,0,0,1,0,0,0,0]);
+        assert_eq!(board.update_board(vec![1, 4], vec![2, 4], 0), 0);
+        assert_eq!(board.update_board(vec![6, 4], vec![5, 4], 0), 0);
+        assert_eq!(board.update_board(vec![0, 4], vec![1, 4], 0), 0);
+        assert_eq!(board.board[0], vec![4,2,3,5,0,3,2,4]);
+        assert_eq!(board.board[1], vec![1,1,1,1,6,1,1,1]);
+        assert_eq!(board.board[2], vec![0,0,0,0,1,0,0,0]);
     }
 
     #[test]
@@ -592,7 +592,7 @@ mod tests {
     #[test]
     fn player_in_check_3() {
         let mut board = Board::new_board(1);
-        board.board[2] = vec![0,0,-2,0,0,0,0,0];
+        board.board[2] = vec![0,0,0,0,0,-2,0,0];
         print_board(&board.board);
         assert_eq!(player_in_check(&board.board, 1), true);
     }
