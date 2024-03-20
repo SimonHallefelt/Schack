@@ -127,7 +127,7 @@ fn legal_pawn_move(board: &mut Vec<Vec<i8>>, bh: &Vec<Vec<Vec<i8>>>, start: &Vec
             } else if !player_in_check(&test_board, player) {
                 return true;
             }
-        } else if board[end[0]][end[1]] == 0 { // En passant
+        } else if board[end[0]][end[1]] == 0 && (start[0] == 3 || start[0] == 4) { // En passant
             if bh.len() == 0 {
                 return false;
             }

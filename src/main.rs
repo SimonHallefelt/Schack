@@ -15,7 +15,7 @@ fn play(mut board: board::Board) {
     loop {
         moves += 1;
         if moves == 20 {
-            break;
+            //break;
         }
         let player = board.turn;
         // board.print_board();
@@ -30,7 +30,9 @@ fn play(mut board: board::Board) {
             let mut rng = rand::thread_rng();
             let input = legal_moves.choose(&mut rng).unwrap().to_vec();
             if legal_moves.contains(&input) {
-                result = board.update_board(vec![input[0], input[1]], vec![input[2], input[3]], player);
+                println!("Player {} moves from {:?} to {:?}", player, vec![input[0], input[1]], vec![input[2], input[3]]);
+                let promote_to = *vec![2,3,4,5].choose(&mut rng).unwrap(); 
+                result = board.update_board(vec![input[0], input[1]], vec![input[2], input[3]], promote_to);
                 move_made = true;
             } else {
                 println!("Illegal move");
