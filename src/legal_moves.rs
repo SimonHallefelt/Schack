@@ -10,7 +10,7 @@ pub fn get_all_legal_moves(board: &Vec<Vec<i8>>, board_history: Vec<Vec<Vec<i8>>
     }
 
     for piece in pieces {
-        let piece_legal_moves = get_legal_moves(board, &board_history, piece, player);
+        let piece_legal_moves = get_legal_moves(board, &board_history, piece, player, true);
         for legal_move in piece_legal_moves {
             legal_moves.push(legal_move);
         }
@@ -20,21 +20,21 @@ pub fn get_all_legal_moves(board: &Vec<Vec<i8>>, board_history: Vec<Vec<Vec<i8>>
     legal_moves
 }
 
-fn get_legal_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, start: (usize, usize), player: i8) -> Vec<Vec<usize>> {
+fn get_legal_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, start: (usize, usize), player: i8, ll: bool) -> Vec<Vec<usize>> {
     let legal_moves = match board[start.0][start.1].abs() {
-        6 => legal_king_moves(board, start, player),
-        5 => legal_queen_moves(board, start, player),
-        4 => legal_rook_moves(board, start, player),
-        3 => legal_bishop_moves(board, start, player),
-        2 => legal_knight_moves(board, start, player),
-        1 => legal_pawn_moves(board, board_history, start, player),
+        6 => legal_king_moves(board, start, player, ll),
+        5 => legal_queen_moves(board, start, player, ll),
+        4 => legal_rook_moves(board, start, player, ll),
+        3 => legal_bishop_moves(board, start, player, ll),
+        2 => legal_knight_moves(board, start, player, ll),
+        1 => legal_pawn_moves(board, board_history, start, player, ll),
         _ => Vec::new()
     };
 
     legal_moves
 }
 
-fn legal_king_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8) -> Vec<Vec<usize>> {
+fn legal_king_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, ll: bool) -> Vec<Vec<usize>> {
     let mut possible_moves = vec![];
     for i in start.0 as i8 - 1 .. start.0 as i8 + 2 {
         for j in start.1 as i8 - 1 .. start.1 as i8 + 2 {
@@ -52,7 +52,9 @@ fn legal_king_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8) -> 
         let mut b = board.clone();
         b[m.0][m.1] = b[start.0][start.1];
         b[start.0][start.1] = 0;
-        if !in_check(&b, player) {
+        if !ll {
+            legal_moves.push(vec![start.0, start.1, m.0, m.1]);
+        } else if !in_check(&b, player) {
             legal_moves.push(vec![start.0, start.1, m.0, m.1]);
         }
     }
@@ -60,28 +62,28 @@ fn legal_king_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8) -> 
     legal_moves
 }
 
-fn legal_queen_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8) -> Vec<Vec<usize>> {
+fn legal_queen_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, ll: bool) -> Vec<Vec<usize>> {
     let dir = vec![(1,0),(-1,0),(0,1),(0,-1), (1,1),(-1,1),(-1,-1),(1,-1)];
-    let legal_moves = possible_direction_moves(board, start, player, dir);
+    let legal_moves = possible_direction_moves(board, start, player, dir, ll);
     // println!("hej, queen, amount of legal moves: {}", legal_moves.len());
     legal_moves
 }
 
-fn legal_rook_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8) -> Vec<Vec<usize>> {
+fn legal_rook_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, ll: bool) -> Vec<Vec<usize>> {
     let dir = vec![(1,0),(-1,0),(0,1),(0,-1)];
-    let legal_moves = possible_direction_moves(board, start, player, dir);
+    let legal_moves = possible_direction_moves(board, start, player, dir, ll);
     // println!("hej, rook, amount of legal moves: {}", legal_moves.len());
     legal_moves
 }
 
-fn legal_bishop_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8) -> Vec<Vec<usize>> {
+fn legal_bishop_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, ll: bool) -> Vec<Vec<usize>> {
     let dir = vec![(1,1),(-1,1),(-1,-1),(1,-1)];
-    let legal_moves = possible_direction_moves(board, start, player, dir);
+    let legal_moves = possible_direction_moves(board, start, player, dir, ll);
     // println!("hej, bishop, amount of legal moves: {}", legal_moves.len());
     legal_moves
 }
 
-fn legal_knight_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8) -> Vec<Vec<usize>> {
+fn legal_knight_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, ll: bool) -> Vec<Vec<usize>> {
     let mut possible_moves = vec![];
     let dir = vec![(2,1),(-2,1),(-2,-1),(2,-1), (1,2),(-1,2),(-1,-2),(1,-2)];
     for d in dir {
@@ -104,7 +106,9 @@ fn legal_knight_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8) -
         let mut b = board.clone();
         b[m.0][m.1] = b[start.0][start.1];
         b[start.0][start.1] = 0;
-        if !in_check(&b, player) {
+        if !ll {
+            legal_moves.push(vec![start.0, start.1, m.0, m.1]);
+        } else if !in_check(&b, player) {
             legal_moves.push(vec![start.0, start.1, m.0, m.1]);
         }
     }
@@ -112,7 +116,7 @@ fn legal_knight_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8) -
     legal_moves
 }
 
-fn legal_pawn_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, start: (usize, usize), player: i8) -> Vec<Vec<usize>> {
+fn legal_pawn_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, start: (usize, usize), player: i8, ll: bool) -> Vec<Vec<usize>> {
     let mut legal_moves = Vec::new();
     let mut possible_moves = vec![];
     let start_row;
@@ -147,14 +151,16 @@ fn legal_pawn_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, sta
         if start.1 < 7 {temp.push(start.1 + 1)}
         if start.1 > 0 {temp.push((start.1 as i8 - 1) as usize)}
         for i in temp {
-            if board[start.0][start.1 + 1] == player * -1 && board[(start.0 as i8 + dir * 2) as usize][i] == 0 {
+            if board[start.0][i] == player * -1 && board[(start.0 as i8 + dir * 2) as usize][i] == 0 {
                 let mut b = board_history.last().unwrap().clone();
-                if b[start.0][start.1 + 1] == 0 && b[(start.0 as i8 + dir * 2) as usize][i] == player * -1 {
+                if b[start.0][i] == 0 && b[(start.0 as i8 + dir * 2) as usize][i] == player * -1 {
                     b = board.clone();
                     b[start.0][i] = 0;
                     b[(start.0 as i8 + dir) as usize][i] = b[start.0][start.1];
                     b[start.0][start.1] = 0;
-                    if !in_check(&b, player) {
+                    if !ll {
+                        legal_moves.push(vec![start.0, start.1, (start.0 as i8 + dir) as usize, i]);
+                    } else if !in_check(&b, player) {
                         legal_moves.push(vec![start.0, start.1, (start.0 as i8 + dir) as usize, i]);
                     }
                 }
@@ -166,7 +172,9 @@ fn legal_pawn_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, sta
         let mut b = board.clone();
         b[m.0][m.1] = b[start.0][start.1];
         b[start.0][start.1] = 0;
-        if !in_check(&b, player) {
+        if !ll {
+            legal_moves.push(vec![start.0, start.1, m.0, m.1]);
+        } else if !in_check(&b, player) {
             legal_moves.push(vec![start.0, start.1, m.0, m.1]);
         }
     }
@@ -175,10 +183,36 @@ fn legal_pawn_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, sta
 }
 
 fn in_check(board: &Vec<Vec<i8>>, player: i8) -> bool {
+    let mut king = (0, 0);
+    for i in 0..8 {
+        for j in 0..8 {
+            if board[i][j] == player * 6 {
+                king = (i, j);
+            }
+        }
+    }
+
+    let mut opponent_pieces = Vec::new();
+    for i in 0..8 {
+        for j in 0..8 {
+            if board[i][j] * player < 0 {
+                opponent_pieces.push((i, j));
+            }
+        }
+    }
+
+    for piece in opponent_pieces {
+        let legal_moves = get_legal_moves(board, &vec![], piece, player * -1, false);
+        for legal_move in legal_moves {
+            if legal_move[2] == king.0 && legal_move[3] == king.1 {
+                return true;
+            }
+        }
+    }
     false
 }
 
-fn possible_direction_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, dir: Vec<(i8, i8)>) -> Vec<Vec<usize>> {
+fn possible_direction_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, dir: Vec<(i8, i8)>, ll: bool) -> Vec<Vec<usize>> {
     let mut possible_moves = vec![];
     for d in dir {
         for i in 1..8 {
@@ -202,7 +236,9 @@ fn possible_direction_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player:
         let mut b = board.clone();
         b[m.0][m.1] = b[start.0][start.1];
         b[start.0][start.1] = 0;
-        if !in_check(&b, player) {
+        if !ll {
+            legal_moves.push(vec![start.0, start.1, m.0, m.1]);
+        } else if !in_check(&b, player) {
             legal_moves.push(vec![start.0, start.1, m.0, m.1]);
         }
     }
