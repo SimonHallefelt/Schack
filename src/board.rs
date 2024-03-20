@@ -24,14 +24,11 @@
     3 - draw
 */
 
-use std::num::ParseIntError;
-
-
 #[derive(Clone)]
 pub struct Board {
-    board: Vec<Vec<i8>>,
-    board_history: Vec<Vec<Vec<i8>>>,
-    turn: i8,
+    pub board: Vec<Vec<i8>>,
+    pub board_history: Vec<Vec<Vec<i8>>>,
+    pub turn: i8,
 }
 
 impl Board {
@@ -51,7 +48,8 @@ impl Board {
         }
     }
 
-    pub fn update_board(&mut self, start: Vec<usize>, end: Vec<usize>, _promote_to: i8) -> i8 {
+    pub fn update_board(&mut self, start: Vec<usize>, end: Vec<usize>, promote_to: i8) -> i8 {
+        print_board(&self.board);
         if self.board[start[0]][start[1]] == 0 {
             println!("no piece at start");
             return 2 * self.turn * -1;
@@ -65,6 +63,13 @@ impl Board {
         self.board_history.push(b);
         self.board[end[0]][end[1]] = self.board[start[0]][start[1]];
         self.board[start[0]][start[1]] = 0;
+        if self.board[end[0]][end[1]].abs() == 1 && (end[0] == 0 || end[0] == 7) {
+            if promote_to < 2 || promote_to > 5 {
+                println!("illegal promotion, promotion: {}", promote_to * player);
+                return 2 * player;
+            }
+            self.board[end[0]][end[1]] = promote_to * player;
+        }
         self.turn *= -1;
         if won(&self.board, &self.board_history, player*-1) {
             return player;
