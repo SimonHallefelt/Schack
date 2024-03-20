@@ -379,6 +379,12 @@ fn draw(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> 
         println!("hej, draw, player in check, false");
         return false;
     }
+    let no_opponent_moves = no_opponent_moves(board, board_history, player);
+    let only_kings = only_kings(board);
+    no_opponent_moves || only_kings
+}
+
+fn no_opponent_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> bool {
     let mut players_piace_positions = vec![];
     for i in 0..8 {
         for j in 0..8 {
@@ -404,6 +410,18 @@ fn draw(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> 
     }
 
     true
+}
+
+fn only_kings(board: &Vec<Vec<i8>>) -> bool {
+    let mut count = 0;
+    for i in 0..8 {
+        for j in 0..8 {
+            if board[i][j] != 0 {
+                count += 1;
+            }
+        }
+    }
+    count == 2
 }
 
 fn print_board(board: &Vec<Vec<i8>>) {
