@@ -29,6 +29,7 @@ pub struct Board {
     pub board: Vec<Vec<i8>>,
     pub board_history: Vec<Vec<Vec<i8>>>,
     pub turn: i8,
+    pub fifty_move_rule: i16,
 }
 
 impl Board {
@@ -45,6 +46,7 @@ impl Board {
             board: board,
             board_history: vec![],
             turn: starting_player,
+            fifty_move_rule: 0,
         }
     }
 
@@ -62,6 +64,11 @@ impl Board {
             return player * 2 * -1
         }
         self.board_history.push(b);
+        if self.board[end[0]][end[1]] != 0 || self.board[start[0]][start[1]].abs() == 1{
+            self.fifty_move_rule = 0;
+        } else {
+            self.fifty_move_rule += 1;
+        }
         self.board[end[0]][end[1]] = self.board[start[0]][start[1]];
         self.board[start[0]][start[1]] = 0;
         if self.board[end[0]][end[1]].abs() == 1 && (end[0] == 0 || end[0] == 7) {
@@ -76,7 +83,7 @@ impl Board {
         if won(&self.board, &self.board_history, self.turn) {
             return player;
         }
-        if draw(&self.board, &self.board_history, self.turn) {
+        if draw(&self.board, &self.board_history, self.turn, self.fifty_move_rule) {
             return 3;
         }
         0
@@ -338,7 +345,7 @@ fn player_in_check(board: &Vec<Vec<i8>>, player: i8) -> bool {
             if board[i][j] * player * -1 > 0 {
                 let start = vec![i, j];
                 let end = vec![king[0], king[1]];
-                let mut b = Board { board: board.clone(), board_history: vec![], turn: player*-1 };
+                let mut b = Board { board: board.clone(), board_history: vec![], turn: player*-1, fifty_move_rule: 0};
                 if legal_move(&mut b, &start, &end, player * -1, false) {
                     return true;
                 }
@@ -363,7 +370,7 @@ fn won(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> b
         }
     }
 
-    let b = Board { board: board.clone(), board_history: board_history.clone(), turn: player };
+    let b = Board { board: board.clone(), board_history: board_history.clone(), turn: player, fifty_move_rule: 0};
     // print_board(&b.board);
     println!("hej, won, search for a legal opponent move");
     for start in players_piace_positions {
@@ -385,7 +392,11 @@ fn won(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> b
     true
 }
 
-fn draw(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> bool {
+fn draw(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, fifty_move_rule: i16) -> bool {
+    if fifty_move_rule >= 50 {
+        println!("hej, draw, 50 moves since last capture");
+        return true;
+    }
     if player_in_check(board, player) {
         println!("hej, draw, player is in check");
         return false;
@@ -405,7 +416,7 @@ fn no_opponent_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, pl
         }
     }
 
-    let b = Board { board: board.clone(), board_history: board_history.clone(), turn: player };
+    let b = Board { board: board.clone(), board_history: board_history.clone(), turn: player, fifty_move_rule: 0};
     // print_board(&b.board);
     for start in players_piace_positions {
         for i in 0..8 {
@@ -700,7 +711,7 @@ mod tests {
     #[test]
     fn draw_1() {
         let board = Board::new_board(1);
-        assert_eq!(draw(&board.board, &board.board_history, 1), false);
+        assert_eq!(draw(&board.board, &board.board_history, 1, 0), false);
     }
 
     #[test]
@@ -708,7 +719,7 @@ mod tests {
         let mut board = Board::new_board(-1);
         board.board[0] = vec![6,0,0,0,0,0,0,0];
         board.board[1] = vec![0,0,-5,0,0,0,0,0];
-        assert_eq!(draw(&board.board, &board.board_history, 1), true);
+        assert_eq!(draw(&board.board, &board.board_history, 1, 0), true);
     }
 
 }
