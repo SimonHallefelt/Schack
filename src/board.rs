@@ -24,12 +24,15 @@
     3 - draw
 */
 
+use std::collections::{hash_set, HashSet};
+
 #[derive(Clone)]
 pub struct Board {
     pub board: Vec<Vec<i8>>,
     pub board_history: Vec<Vec<Vec<i8>>>,
     pub turn: i8,
     pub fifty_move_rule: i16,
+    pub castle_pieces: HashSet<(usize,usize)>
 }
 
 impl Board {
@@ -41,12 +44,12 @@ impl Board {
         board[6] = vec![-1; 8];
         board[7] = vec![-4,-2,-3,-5,-6,-3,-2,-4];
         print_board(&board);
-
         Board {
             board: board,
             board_history: vec![],
             turn: starting_player,
             fifty_move_rule: 0,
+            castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()
         }
     }
 
@@ -62,6 +65,9 @@ impl Board {
             println!("illegal move, start: {:?}, end: {:?}", start, end);
             print_board(&self.board);
             return player * 2 * -1
+        }
+        if self.castle_pieces.contains(&(start[0], start[1])) {
+            self.castle_pieces.remove(&(start[0], start[1]));
         }
         self.board_history.push(b);
         if self.board[end[0]][end[1]] != 0 || self.board[start[0]][start[1]].abs() == 1{
@@ -115,7 +121,7 @@ fn legal_move(board: &mut Board, start: &Vec<usize>, end: &Vec<usize>, player: i
         3 => legal_bishop_move(&board.board, start, end, player, check_checker),
         4 => legal_rook_move(&board.board, start, end, player, check_checker),
         5 => legal_queen_move(&board.board, start, end, player, check_checker),
-        6 => legal_king_move(&board.board, start, end, player, check_checker),
+        6 => legal_king_move(&mut board.board, start, end, player, check_checker, &board.castle_pieces),
         _ => false,
     };
     legal
@@ -307,11 +313,51 @@ fn legal_queen_move(board: &Vec<Vec<i8>>, start: &Vec<usize>, end: &Vec<usize>, 
     false
 }
 
-fn legal_king_move(board: &Vec<Vec<i8>>, start: &Vec<usize>, end: &Vec<usize>, player: i8, check_checker: bool) -> bool {
+fn legal_king_move(board: &mut Vec<Vec<i8>>, start: &Vec<usize>, end: &Vec<usize>, player: i8, check_checker: bool, castle_pieces: &HashSet<(usize,usize)>) -> bool {
     let mut test_board = board.clone();
     let a = (start[0] as i8 - end[0] as i8).abs();
     let b = (start[1] as i8 - end[1] as i8).abs();
-    if a <= 1 && b <= 1 && a + b > 0 {
+    // castle
+    if castle_pieces.contains(&(start[0],start[1])) && b == 2 {
+        if player_in_check(&test_board, player) {
+            return false;
+        }
+        let s;
+        let e;
+        let rms;
+        let rme;
+        if start[1] < end[1] && castle_pieces.contains(&(start[0],7)) {
+            s = start[1];
+            e = 7;
+            rms = (start[0],7);
+            rme = (start[0],start[1]+1);
+        } else if start[1] > end[1] && castle_pieces.contains(&(start[0],0)) {
+            s = 1;
+            e = start[1];
+            rms = (start[0],0);
+            rme = (start[0],start[1]-1);
+        } else {
+            return false;
+        }
+        for i in s..e {
+            if board[start[0]][i] != 0 {
+                return false;
+            }
+        }
+        test_board[end[0]][end[1]] = test_board[start[0]][start[1]];
+        test_board[start[0]][start[1]] = 0;
+        test_board[rme.0][rme.1] = test_board[rms.0][rms.1];
+        test_board[rms.0][rms.1] = 0;
+        if !check_checker {
+            return true;
+        } else if !player_in_check(&test_board, player) {
+            board[rme.0][rme.1] = board[rms.0][rms.1];
+            board[rms.0][rms.1] = 0;
+            return true;
+        }
+    }
+    // normal move
+    if a <= 1 && b <= 1 && a + b > 0 { 
         test_board[end[0]][end[1]] = test_board[start[0]][start[1]];
         test_board[start[0]][start[1]] = 0;
         if !check_checker {
@@ -345,7 +391,12 @@ fn player_in_check(board: &Vec<Vec<i8>>, player: i8) -> bool {
             if board[i][j] * player * -1 > 0 {
                 let start = vec![i, j];
                 let end = vec![king[0], king[1]];
-                let mut b = Board { board: board.clone(), board_history: vec![], turn: player*-1, fifty_move_rule: 0};
+                let mut b = Board { 
+                    board: board.clone(), 
+                    board_history: vec![], 
+                    turn: player*-1, 
+                    fifty_move_rule: 0,
+                    castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
                 if legal_move(&mut b, &start, &end, player * -1, false) {
                     return true;
                 }
@@ -370,7 +421,13 @@ fn won(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> b
         }
     }
 
-    let b = Board { board: board.clone(), board_history: board_history.clone(), turn: player, fifty_move_rule: 0};
+    let b = Board { 
+        board: board.clone(), 
+        board_history: 
+        board_history.clone(), 
+        turn: player, 
+        fifty_move_rule: 0,
+        castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
     // print_board(&b.board);
     println!("hej, won, search for a legal opponent move");
     for start in players_piace_positions {
@@ -416,7 +473,12 @@ fn no_opponent_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, pl
         }
     }
 
-    let b = Board { board: board.clone(), board_history: board_history.clone(), turn: player, fifty_move_rule: 0};
+    let b = Board { 
+        board: board.clone(), 
+        board_history: board_history.clone(), 
+        turn: player, 
+        fifty_move_rule: 0,
+        castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
     // print_board(&b.board);
     for start in players_piace_positions {
         for i in 0..8 {
@@ -627,6 +689,27 @@ mod tests {
         assert_eq!(board.board[0], vec![4,2,3,5,0,3,2,4]);
         assert_eq!(board.board[1], vec![1,1,1,1,6,1,1,1]);
         assert_eq!(board.board[2], vec![0,0,0,0,1,0,0,0]);
+    }
+
+    #[test]
+    fn legal_king_move_2() {
+        let mut board = Board::new_board(1);
+        board.board[0] = vec![4,0,0,0,6,3,2,4];
+        assert_eq!(board.board[1], vec![1,1,1,1,1,1,1,1]);
+        assert_eq!(board.update_board(vec![0, 4], vec![0, 2], 0), 0);
+        assert_eq!(board.board[0], vec![0,0,6,4,0,3,2,4]);
+    }
+
+    #[test]
+    fn legal_king_move_3() {
+        let mut board = Board::new_board(1);
+        board.board[0] = vec![4,0,0,0,6,3,2,4];
+        assert_eq!(board.board[1], vec![1,1,1,1,1,1,1,1]);
+        assert_eq!(board.update_board(vec![0, 0], vec![0, 1], 0), 0);
+        assert_eq!(board.update_board(vec![6, 4], vec![5, 4], 0), 0);
+        assert_eq!(board.update_board(vec![0, 1], vec![0, 0], 0), 0);
+        assert_eq!(board.update_board(vec![5, 4], vec![4, 4], 0), 0);
+        assert_eq!(board.update_board(vec![0, 4], vec![0, 2], 0), -2);
     }
 
     #[test]
