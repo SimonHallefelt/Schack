@@ -318,7 +318,7 @@ fn legal_king_move(board: &mut Vec<Vec<i8>>, start: &Vec<usize>, end: &Vec<usize
     let a = (start[0] as i8 - end[0] as i8).abs();
     let b = (start[1] as i8 - end[1] as i8).abs();
     // castle
-    if castle_pieces.contains(&(start[0],start[1])) && b == 2 {
+    if castle_pieces.contains(&(start[0],start[1])) && b == 2 && a == 0 {
         if player_in_check(&test_board, player) {
             return false;
         }
@@ -380,6 +380,7 @@ fn player_in_check(board: &Vec<Vec<i8>>, player: i8) -> bool {
     }
 
     if king.len() == 0 {
+        println!("hej, player in check, no king");
         return false;
     }
 
@@ -398,6 +399,7 @@ fn player_in_check(board: &Vec<Vec<i8>>, player: i8) -> bool {
                     fifty_move_rule: 0,
                     castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
                 if legal_move(&mut b, &start, &end, player * -1, false) {
+                    println!("hej, player in check, true, player: {}, start: {:?}, end: {:?}", player, start, end);
                     return true;
                 }
             }
@@ -664,6 +666,21 @@ mod tests {
         assert_eq!(board.board[1], vec![0,1,1,1,1,1,1,1]);
         assert_eq!(board.board[2], vec![4,0,0,0,0,0,0,0]);
         assert_eq!(board.board[3], vec![1,0,0,0,0,0,0,0]);
+    }
+
+    #[test]
+    fn legal_rook_move_2() {
+        let mut board = Board::new_board(-1);
+        board.board[7] = vec![-4, 0, 0, 0, 0,-6, 0, 0];
+        board.board[6] = vec![ 0, 0, 0, 0, 0, 0, 0, 0];
+        board.board[5] = vec![-3, 0, 0,-1, 0, 0,-1, 0];
+        board.board[4] = vec![-1, 0,-4, 0, 0, 0, 0,-1];
+        board.board[3] = vec![ 1, 0, 4, 0, 0, 0, 0, 0];
+        board.board[2] = vec![ 0, 1, 0, 0, 0, 0, 0, 0];
+        board.board[1] = vec![ 0, 0, 0, 0,-4, 0, 0, 0];
+        board.board[0] = vec![ 0, 0, 0, 0, 0, 0, 0, 6];
+        print_board(&board.board);
+        assert_eq!(board.update_board(vec![4, 2], vec![4, 5], 0), 0);
     }
 
     #[test]

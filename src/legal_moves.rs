@@ -1,4 +1,6 @@
-pub fn get_all_legal_moves(board: &Vec<Vec<i8>>, board_history: Vec<Vec<Vec<i8>>>, player: i8) -> Vec<Vec<usize>> {
+use std::collections::HashSet;
+
+pub fn get_all_legal_moves(board: &Vec<Vec<i8>>, board_history: Vec<Vec<Vec<i8>>>, player: i8, castle_pieces: &HashSet<(usize,usize)>) -> Vec<Vec<usize>> {
     let mut legal_moves = Vec::new();
     let mut pieces = Vec::new();
     for i in 0..8 {
@@ -10,7 +12,7 @@ pub fn get_all_legal_moves(board: &Vec<Vec<i8>>, board_history: Vec<Vec<Vec<i8>>
     }
 
     for piece in pieces {
-        let piece_legal_moves = get_legal_moves(board, &board_history, piece, player, true);
+        let piece_legal_moves = get_legal_moves(board, &board_history, piece, player, true, castle_pieces);
         for legal_move in piece_legal_moves {
             legal_moves.push(legal_move);
         }
@@ -20,9 +22,9 @@ pub fn get_all_legal_moves(board: &Vec<Vec<i8>>, board_history: Vec<Vec<Vec<i8>>
     legal_moves
 }
 
-fn get_legal_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, start: (usize, usize), player: i8, ll: bool) -> Vec<Vec<usize>> {
+fn get_legal_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, start: (usize, usize), player: i8, ll: bool, castle_pieces: &HashSet<(usize,usize)>) -> Vec<Vec<usize>> {
     let legal_moves = match board[start.0][start.1].abs() {
-        6 => legal_king_moves(board, start, player, ll),
+        6 => legal_king_moves(board, start, player, ll, castle_pieces),
         5 => legal_queen_moves(board, start, player, ll),
         4 => legal_rook_moves(board, start, player, ll),
         3 => legal_bishop_moves(board, start, player, ll),
@@ -34,7 +36,7 @@ fn get_legal_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, star
     legal_moves
 }
 
-fn legal_king_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, ll: bool) -> Vec<Vec<usize>> {
+fn legal_king_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, ll: bool, castle_pieces: &HashSet<(usize,usize)>) -> Vec<Vec<usize>> {
     let mut possible_moves = vec![];
     for i in start.0 as i8 - 1 .. start.0 as i8 + 2 {
         for j in start.1 as i8 - 1 .. start.1 as i8 + 2 {
@@ -58,6 +60,22 @@ fn legal_king_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, ll:
             legal_moves.push(vec![start.0, start.1, m.0, m.1]);
         }
     }
+
+    // Castling
+    let possible_castle_moves = legal_castle_moves(board, start, player, castle_pieces);
+    for m in possible_castle_moves {
+        let mut b = board.clone();
+        b[start.0][m[0]] = b[start.0][start.1];
+        b[start.0][start.1] = 0;
+        b[start.0][m[2]] = b[start.0][m[1]];
+        b[start.0][m[1]] = 0;
+        if !ll {
+            legal_moves.push(vec![start.0, start.1, start.0, m[0]]);
+        } else if !in_check(&b, player) {
+            legal_moves.push(vec![start.0, start.1, start.0, m[0]]);
+        }
+    }
+
     // println!("hej, king, amount of legal moves: {}", legal_moves.len());
     legal_moves
 }
@@ -202,7 +220,7 @@ fn in_check(board: &Vec<Vec<i8>>, player: i8) -> bool {
     }
 
     for piece in opponent_pieces {
-        let legal_moves = get_legal_moves(board, &vec![], piece, player * -1, false);
+        let legal_moves = get_legal_moves(board, &vec![], piece, player * -1, false, &HashSet::new());
         for legal_move in legal_moves {
             if legal_move[2] == king.0 && legal_move[3] == king.1 {
                 return true;
@@ -245,6 +263,35 @@ fn possible_direction_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player:
     legal_moves
 }
 
+fn legal_castle_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, castle_pieces: &HashSet<(usize,usize)>) -> Vec<Vec<usize>> {
+    let mut possible_moves = vec![];
+    if castle_pieces.contains(&start) {
+        if castle_pieces.contains(&(start.0, 0)) {
+            let mut can_castle = true;
+            for i in 1..start.1 {
+                if board[start.0][i] != 0 {
+                    can_castle = false;
+                }
+            }
+            if can_castle {
+                possible_moves.push(vec![start.1 - 2, 0, start.1 - 1]);
+            }
+        } else if castle_pieces.contains(&(start.0, 7)) {
+            let mut can_castle = true;
+            for i in start.1 + 1..7 {
+                if board[start.0][i] != 0 {
+                    can_castle = false;
+                }
+            }
+            if can_castle {
+                possible_moves.push(vec![start.1 + 2, 7, start.1 + 1]);
+            }
+            
+        }
+    }
+    possible_moves
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -278,9 +325,9 @@ mod tests {
     #[test]
     fn get_all_legal_moves_1() {
         let board = get_new_board();
-        let legal_moves = get_all_legal_moves(&board, vec![], 1);
+        let legal_moves = get_all_legal_moves(&board, vec![], 1, &HashSet::new());
         assert_eq!(legal_moves.len(), 20);
-        let legal_moves = get_all_legal_moves(&board, vec![], -1);
+        let legal_moves = get_all_legal_moves(&board, vec![], -1, &HashSet::new());
         assert_eq!(legal_moves.len(), 20);
     }
 
@@ -289,10 +336,21 @@ mod tests {
         let mut board = get_new_board();
         board[1] = vec![0, 0, 0, 0, 0, 0, 0, 0];
         board[6] = vec![0, 0, 0, 0, 0, 0, 0, 0];
-        let legal_moves = get_all_legal_moves(&board, vec![], 1);
+        let legal_moves = get_all_legal_moves(&board, vec![], 1, &HashSet::new());
         println!("{:?}", legal_moves);
         assert_eq!(legal_moves.len(), 50);
-        let legal_moves = get_all_legal_moves(&board, vec![], -1);
+        let legal_moves = get_all_legal_moves(&board, vec![], -1, &HashSet::new());
         assert_eq!(legal_moves.len(), 50);
+    }
+
+    #[test]
+    fn castle_1() {
+        let mut board = get_new_board();
+        board[0] = vec![4, 0, 0, 0, 6, 0, 0, 0];
+        let mut castle_pieces = HashSet::new();
+        castle_pieces.insert((0, 4));
+        castle_pieces.insert((0, 0));
+        let legal_moves = get_all_legal_moves(&board, vec![], 1, &castle_pieces);
+        assert_eq!(legal_moves.len(), 8*2+3+2+1);
     }
 }

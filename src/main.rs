@@ -19,7 +19,7 @@ fn play(mut board: board::Board) {
         }
         let player = board.turn;
         // board.print_board();
-        let legal_moves = legal_moves::get_all_legal_moves(&board.board, board.board_history.clone(), player);
+        let legal_moves = legal_moves::get_all_legal_moves(&board.board, board.board_history.clone(), player, &board.castle_pieces);
         if legal_moves.len() == 0 {
             println!("Error, No legal moves for player {}", player);
             break;
