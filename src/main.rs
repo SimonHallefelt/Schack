@@ -8,6 +8,7 @@ fn main() {
     println!("Hello, world!");
     let board = board::Board::new_board(1);
     play(board);
+    ui::start_ui();
 }
 
 fn play(mut board: board::Board) {

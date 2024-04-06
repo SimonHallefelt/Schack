@@ -1,5 +1,53 @@
 import { Button, VerticalBox, HorizontalBox, GroupBox } from "std-widgets.slint";
 
-export component AppWindow inherits Window {
-    
+struct boardSquareData {
+    is_clicked: bool,
+    possible_move: bool,
+}
+
+component boardSquare inherits Rectangle{
+    callback clicked();
+
+    in property <bool> position_even: false;
+
+    background: position_even ? #108d27 : #00fff2;
+}
+
+export component appWindow inherits Window {
+    in-out property <int> counter;
+    in-out property <[[int]]> piece_positions: [[0]];
+    property <length> board_square_size: 60px;
+
+    in property <[boardSquareData]> board: [{
+        is_clicked: false,
+        possible_move: false 
+    }];
+
+
+    default-font-size: 15px;
+    VerticalBox {
+        Text {
+            text: "counter: \{counter}";
+        }
+        Button {
+            text: "increase counter";
+            clicked => {
+                counter += 1;
+            }
+        }
+        Text {
+            text: "Board";
+        }
+        Rectangle {
+            height: (board_square_size+5px) * 8;
+            width: (board_square_size+5px) * 8;
+            for s[i] in board : boardSquare {
+                x: (board_square_size+5px) * Math.mod(i, 8);
+                y: (board_square_size+5px) * Math.floor(i / 8);
+                height: board_square_size;
+                width: board_square_size;
+                position_even: Math.mod(Math.mod(i, 8) + Math.floor(i / 8), 2) == 0;
+            }
+        }
+    }
 }

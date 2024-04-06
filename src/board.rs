@@ -319,6 +319,7 @@ fn legal_king_move(board: &mut Vec<Vec<i8>>, start: &Vec<usize>, end: &Vec<usize
     let b = (start[1] as i8 - end[1] as i8).abs();
     // castle
     if castle_pieces.contains(&(start[0],start[1])) && b == 2 && a == 0 {
+        // println!("hej, legal move, king, castle");
         if player_in_check(&test_board, player) {
             return false;
         }
@@ -327,7 +328,7 @@ fn legal_king_move(board: &mut Vec<Vec<i8>>, start: &Vec<usize>, end: &Vec<usize
         let rms;
         let rme;
         if start[1] < end[1] && castle_pieces.contains(&(start[0],7)) {
-            s = start[1];
+            s = start[1]+1;
             e = 7;
             rms = (start[0],7);
             rme = (start[0],start[1]+1);
@@ -735,6 +736,15 @@ mod tests {
         assert_eq!(board.update_board(vec![0, 1], vec![0, 0], 0), 0);
         assert_eq!(board.update_board(vec![5, 4], vec![4, 4], 0), 0);
         assert_eq!(board.update_board(vec![0, 4], vec![0, 2], 0), -2);
+    }
+
+    #[test]
+    fn legal_castle_move_1() {
+        let mut board = Board::new_board(1);
+        board.board[0] = vec![4,0,0,0,6,3,2,4];
+        board.board[7] = vec![0,0,0,0,-6,0,0,-4];
+        assert_eq!(board.update_board(vec![0, 4], vec![0, 2], 0), 0);
+        assert_eq!(board.update_board(vec![7, 4], vec![7, 6], 0), 0);
     }
 
     #[test]
