@@ -591,6 +591,14 @@ mod tests {
         assert_eq!(board.update_board(vec![3, 1], vec![4, 0], 0), 0);
         assert_eq!(board.update_board(vec![6, 1], vec![4, 1], 0), 0);
         assert_eq!(board.update_board(vec![4, 0], vec![5, 1], 0), 0);
+        assert_eq!(board.board[0], vec![ 4, 2, 3, 5, 6, 3, 2, 4]);
+        assert_eq!(board.board[1], vec![ 0, 0, 1, 1, 1, 1, 1, 1]);
+        assert_eq!(board.board[2], vec![ 0, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(board.board[3], vec![ 1, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(board.board[4], vec![ 0, 0,-1, 0, 0, 0, 0, 0]);
+        assert_eq!(board.board[5], vec![ 0, 1, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(board.board[6], vec![ 0, 0, 0,-1,-1,-1,-1,-1]);
+        assert_eq!(board.board[7], vec![-4,-2,-3,-5,-6,-3,-2,-4]);
     }
 
     #[test]

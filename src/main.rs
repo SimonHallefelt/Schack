@@ -2,6 +2,7 @@ use rand::seq::SliceRandom;
 
 mod board;
 mod legal_moves;
+mod ui;
 
 fn main() {
     println!("Hello, world!");
