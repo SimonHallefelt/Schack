@@ -24,7 +24,7 @@
     3 - draw
 */
 
-use std::collections::{hash_set, HashSet};
+use std::collections::{HashSet};
 
 #[derive(Clone)]
 pub struct Board {
@@ -66,9 +66,8 @@ impl Board {
             print_board(&self.board);
             return player * 2 * -1
         }
-        if self.castle_pieces.contains(&(start[0], start[1])) {
-            self.castle_pieces.remove(&(start[0], start[1]));
-        }
+        self.castle_pieces.remove(&(start[0], start[1]));
+        self.castle_pieces.remove(&(end[0], end[1]));
         self.board_history.push(b);
         if self.board[end[0]][end[1]] != 0 || self.board[start[0]][start[1]].abs() == 1{
             self.fifty_move_rule = 0;
@@ -415,11 +414,11 @@ fn won(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> b
         println!("hej, won, player not in check");
         return false;
     }
-    let mut players_piace_positions = vec![];
+    let mut players_piece_positions = vec![];
     for i in 0..8 {
         for j in 0..8 {
             if board[i][j] * player > 0 {
-                players_piace_positions.push(vec![i, j]);
+                players_piece_positions.push(vec![i, j]);
             }
         }
     }
@@ -433,7 +432,7 @@ fn won(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> b
         castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
     // print_board(&b.board);
     println!("hej, won, search for a legal opponent move");
-    for start in players_piace_positions {
+    for start in players_piece_positions {
         // println!("hej, won, start: {:?}", start);
         for i in 0..8 {
             for j in 0..8 {
