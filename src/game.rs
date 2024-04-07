@@ -16,6 +16,10 @@ impl Game {
         }
     }
 
+    pub fn get_board(self) -> board::Board {
+        return self.board;
+    }
+
     pub fn run(self) {
         if self.running {
             println!("game is already running");
@@ -26,7 +30,7 @@ impl Game {
 }
 
 
-pub fn run(mut board: board::Board) {
+fn run(mut board: board::Board) {
     let mut result = 0;
     let mut moves = 0;
     loop {

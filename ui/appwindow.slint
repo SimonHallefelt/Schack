@@ -1,12 +1,15 @@
 import { Button, VerticalBox, HorizontalBox, GroupBox } from "std-widgets.slint";
-
+// import { Window, Rectangle, Text, Image, TouchArea } from "std-widgets.slint";
 
 component boardSquare inherits Rectangle{
     callback clicked();
 
-    in property <bool> position_even: false;
+    in property <length> square_size;
+    in property <bool> position_even;
     in property <bool> is_clicked;
-    in property <bool> possible_move: false;
+    in property <bool> possible_move;
+    in property <int> piece;
+
     property <bool> b: false;
 
     area := TouchArea {  
@@ -19,10 +22,18 @@ component boardSquare inherits Rectangle{
     property <color> odd-color: is_clicked ? #0011ff94 : #0011ff;
 
     background: area.has-hover ? hover: position_even ? even-color : odd-color;
-    Text {
-        text: is_clicked ? "true" : "false";
+    // Text {
+    //     text: is_clicked ? "true" : "false";
+    // }
+    Rectangle {
+        Image {
+            width: square_size;
+            height: square_size;
+            // source: @image-url("../src/icons/empty.png");
+            source: @image-url("../src/icons/white-pawn.png");
+        }
     }
-    
+
 }
 
 export component appWindow inherits Window {
@@ -30,7 +41,7 @@ export component appWindow inherits Window {
     in-out property <[bool]> square_clicked: [false];
     in-out property <[bool]> possible_move: [false];
     in-out property <[int]> piece_positions: [0];
-    property <length> board_square_size: 60px;
+    property <length> square_size: 60px;
 
     default-font-size: 15px;
     VerticalBox {
@@ -47,17 +58,19 @@ export component appWindow inherits Window {
             text: "Board";
         }
         Rectangle {
-            height: (board_square_size+5px) * 8;
-            width: (board_square_size+5px) * 8;
+            height: (square_size+5px) * 8;
+            width: (square_size+5px) * 8;
             for s[i] in 64 : boardSquare {
-                x: (board_square_size+5px) * Math.mod(i, 8);
-                y: (board_square_size+5px) * Math.floor(i / 8);
-                height: board_square_size;
-                width: board_square_size;
+                x: (square_size+5px) * Math.mod(i, 8);
+                y: (square_size+5px) * Math.floor(i / 8);
+                height: square_size;
+                width: square_size;
                 position_even: Math.mod(Math.mod(i, 8) + Math.floor(i / 8), 2) == 0;
                 is_clicked: square_clicked[i];
                 possible_move: possible_move[i];
-                
+                piece: piece_positions[i];
+                square_size: square_size;
+
                 clicked => {
                     square_clicked[i] = !square_clicked[i];
                 }
