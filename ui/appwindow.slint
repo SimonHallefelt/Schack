@@ -1,28 +1,36 @@
 import { Button, VerticalBox, HorizontalBox, GroupBox } from "std-widgets.slint";
 
-struct boardSquareData {
-    is_clicked: bool,
-    possible_move: bool,
-}
 
 component boardSquare inherits Rectangle{
     callback clicked();
 
     in property <bool> position_even: false;
+    in property <bool> is_clicked;
+    in property <bool> possible_move: false;
+    property <bool> b: false;
 
-    background: position_even ? #108d27 : #00fff2;
+    area := TouchArea {  
+        clicked => {
+            root.clicked();
+        }
+    }
+    property <color> hover: is_clicked ? #ff00009d : #ff0000;
+    property <color> even-color: is_clicked ? #108d2794 : #108d27;
+    property <color> odd-color: is_clicked ? #0011ff94 : #0011ff;
+
+    background: area.has-hover ? hover: position_even ? even-color : odd-color;
+    Text {
+        text: is_clicked ? "true" : "false";
+    }
+    
 }
 
 export component appWindow inherits Window {
     in-out property <int> counter;
-    in-out property <[[int]]> piece_positions: [[0]];
+    in-out property <[bool]> square_clicked: [false];
+    in-out property <[bool]> possible_move: [false];
+    in-out property <[int]> piece_positions: [0];
     property <length> board_square_size: 60px;
-
-    in property <[boardSquareData]> board: [{
-        is_clicked: false,
-        possible_move: false 
-    }];
-
 
     default-font-size: 15px;
     VerticalBox {
@@ -41,12 +49,18 @@ export component appWindow inherits Window {
         Rectangle {
             height: (board_square_size+5px) * 8;
             width: (board_square_size+5px) * 8;
-            for s[i] in board : boardSquare {
+            for s[i] in 64 : boardSquare {
                 x: (board_square_size+5px) * Math.mod(i, 8);
                 y: (board_square_size+5px) * Math.floor(i / 8);
                 height: board_square_size;
                 width: board_square_size;
                 position_even: Math.mod(Math.mod(i, 8) + Math.floor(i / 8), 2) == 0;
+                is_clicked: square_clicked[i];
+                possible_move: possible_move[i];
+                
+                clicked => {
+                    square_clicked[i] = !square_clicked[i];
+                }
             }
         }
     }
