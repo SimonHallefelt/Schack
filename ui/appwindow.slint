@@ -8,9 +8,7 @@ component boardSquare inherits Rectangle{
     in property <bool> position_even;
     in property <bool> is_clicked;
     in property <bool> possible_move;
-    in property <int> piece;
-
-    property <bool> b: false;
+    in property <image> piece;
 
     area := TouchArea {  
         clicked => {
@@ -22,16 +20,10 @@ component boardSquare inherits Rectangle{
     property <color> odd-color: is_clicked ? #0011ff94 : #0011ff;
 
     background: area.has-hover ? hover: position_even ? even-color : odd-color;
-    // Text {
-    //     text: is_clicked ? "true" : "false";
-    // }
-    Rectangle {
-        Image {
-            width: square_size;
-            height: square_size;
-            // source: @image-url("../src/icons/empty.png");
-            source: @image-url("../src/icons/white-pawn.png");
-        }
+    Image {
+        width: square_size;
+        height: square_size;
+        source: piece;
     }
 
 }
@@ -40,8 +32,8 @@ export component appWindow inherits Window {
     in-out property <int> counter;
     in-out property <[bool]> square_clicked: [false];
     in-out property <[bool]> possible_move: [false];
-    in-out property <[int]> piece_positions: [0];
-    property <length> square_size: 60px;
+    in-out property <[image]> piece_positions: [@image-url("../icons/white-pawn.png")];
+    property <length> square_size: 80px;
 
     default-font-size: 15px;
     VerticalBox {

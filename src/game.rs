@@ -16,8 +16,8 @@ impl Game {
         }
     }
 
-    pub fn get_board(self) -> board::Board {
-        return self.board;
+    pub fn get_board(&self) -> Vec<Vec<i8>> {
+        return self.board.board.clone();
     }
 
     pub fn run(self) {
