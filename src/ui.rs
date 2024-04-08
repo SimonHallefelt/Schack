@@ -1,10 +1,10 @@
 slint::include_modules!();
 
 use slint::{Model, ModelRc, VecModel, Timer, TimerMode, Image};
-use std::sync::{Arc, Mutex};
+use std::{sync::{Arc, Mutex}, path::Path};
 
+use crate::game;
 use crate::game::Game;
-use std::path::Path;
 
 pub fn start_ui(game: Game) -> Result<(), slint::PlatformError> {
     let ui = appWindow::new()?;
@@ -24,11 +24,22 @@ pub fn start_ui(game: Game) -> Result<(), slint::PlatformError> {
 
 fn run_ui(ui: appWindow, game: Arc<Mutex<Game>>) -> Result<(), slint::PlatformError> {
     
-    let ui2 = ui.as_weak();
-    let b = game.lock().unwrap().get_board();
-    update_board(b, ui2);
+    let ui_time = ui.as_weak();
+    let g_time = game.clone();
+    let time = Timer::default();
+    time.start(TimerMode::Repeated, std::time::Duration::from_millis(10), move || {
+        let game = g_time.lock().unwrap();
+        let ui = ui_time.upgrade().unwrap().as_weak();
+        update_board(game.get_board(), ui);
+    });
 
-
+    ui.on_start_game({
+        let game = Arc::clone(&game);
+        let ui = ui.as_weak();
+        move || {
+            game::start_game(Arc::clone(&game));
+        }
+    });
 
     ui.run()
 }

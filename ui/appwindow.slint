@@ -29,6 +29,8 @@ component boardSquare inherits Rectangle{
 }
 
 export component appWindow inherits Window {
+    callback start_game();
+
     in-out property <int> counter;
     in-out property <[bool]> square_clicked: [false];
     in-out property <[bool]> possible_move: [false];
@@ -66,6 +68,12 @@ export component appWindow inherits Window {
                 clicked => {
                     square_clicked[i] = !square_clicked[i];
                 }
+            }
+        }
+        Button {
+            text: "Start Game";
+            clicked => {
+                root.start_game();
             }
         }
     }

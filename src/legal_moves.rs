@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-pub fn get_all_legal_moves(board: &Vec<Vec<i8>>, board_history: Vec<Vec<Vec<i8>>>, player: i8, castle_pieces: &HashSet<(usize,usize)>) -> Vec<Vec<usize>> {
+pub fn get_all_legal_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, castle_pieces: &HashSet<(usize,usize)>) -> Vec<Vec<usize>> {
     let mut legal_moves = Vec::new();
     let mut pieces = Vec::new();
     for i in 0..8 {
@@ -325,9 +325,9 @@ mod tests {
     #[test]
     fn get_all_legal_moves_1() {
         let board = get_new_board();
-        let legal_moves = get_all_legal_moves(&board, vec![], 1, &HashSet::new());
+        let legal_moves = get_all_legal_moves(&board, &vec![], 1, &HashSet::new());
         assert_eq!(legal_moves.len(), 20);
-        let legal_moves = get_all_legal_moves(&board, vec![], -1, &HashSet::new());
+        let legal_moves = get_all_legal_moves(&board, &vec![], -1, &HashSet::new());
         assert_eq!(legal_moves.len(), 20);
     }
 
@@ -336,10 +336,10 @@ mod tests {
         let mut board = get_new_board();
         board[1] = vec![0, 0, 0, 0, 0, 0, 0, 0];
         board[6] = vec![0, 0, 0, 0, 0, 0, 0, 0];
-        let legal_moves = get_all_legal_moves(&board, vec![], 1, &HashSet::new());
+        let legal_moves = get_all_legal_moves(&board, &vec![], 1, &HashSet::new());
         println!("{:?}", legal_moves);
         assert_eq!(legal_moves.len(), 50);
-        let legal_moves = get_all_legal_moves(&board, vec![], -1, &HashSet::new());
+        let legal_moves = get_all_legal_moves(&board, &vec![], -1, &HashSet::new());
         assert_eq!(legal_moves.len(), 50);
     }
 
@@ -350,7 +350,7 @@ mod tests {
         let mut castle_pieces = HashSet::new();
         castle_pieces.insert((0, 4));
         castle_pieces.insert((0, 0));
-        let legal_moves = get_all_legal_moves(&board, vec![], 1, &castle_pieces);
+        let legal_moves = get_all_legal_moves(&board, &vec![], 1, &castle_pieces);
         assert_eq!(legal_moves.len(), 8*2+3+2+1);
     }
 }
