@@ -1,8 +1,7 @@
 use std::{sync::{Arc, Mutex}, thread};
-use rand::seq::SliceRandom;
 
 use crate::board;
-use crate::legal_moves::get_all_legal_moves;
+use crate::players;
 
 pub struct Game {
     running: bool,
@@ -38,42 +37,31 @@ pub fn start_game(game: Arc<Mutex<Game>>){
 
 
 fn run(game: Arc<Mutex<Game>>) {
-    let mut result = 0;
+    let mut result;
     let mut moves = 0;
     let mut player_turn;
     let mut board;
-    let mut board_history;
-    let mut castle_pieces;
+    let player_1 = players::Player::new(1, 0);
+    let player_2 = players::Player::new(-1, 0);
 
     loop {
         let g = game.lock().unwrap();
         player_turn = g.board.turn;
-        board = g.board.board.clone();
-        board_history = g.board.board_history.clone();
-        castle_pieces = g.board.castle_pieces.clone();
+        board = g.board.clone();
         drop(g);
 
         moves += 1;
-        let legal_moves = get_all_legal_moves(&board, &board_history, player_turn, &castle_pieces);
-        if legal_moves.len() == 0 {
-            println!("Error, No legal moves for player {}", player_turn);
-            break;
+        let p_move;
+        if player_turn == 1 {
+            p_move = player_1.run(&board);
+        } else {
+            p_move = player_2.run(&board);
         }
-        let mut move_made = false;
-        while !move_made {
-            println!("Player {}'s turn, Legal moves: {:?}", player_turn, legal_moves);
-            let mut rng = rand::thread_rng();
-            let input = legal_moves.choose(&mut rng).unwrap().to_vec();
-            if legal_moves.contains(&input) {
-                let mut g = game.lock().unwrap();
-                println!("Player {} moves from {:?} to {:?}", player_turn, vec![input[0], input[1]], vec![input[2], input[3]]);
-                let promote_to = *vec![2,3,4,5].choose(&mut rng).unwrap(); 
-                result = g.board.update_board(vec![input[0], input[1]], vec![input[2], input[3]], promote_to);
-                move_made = true;
-            } else {
-                println!("Illegal move");
-            }
-        }
+        
+        let mut g = game.lock().unwrap();
+        println!("Player {} moves from {:?} to {:?}", player_turn, vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]]);
+        result = g.board.update_board(vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]], p_move[4] as i8);
+
         if result != 0 {
             println!("Game end, result {}", result);
             println!("Stats, total moves {}", moves);
