@@ -22,7 +22,7 @@ impl Game {
 }
 
 
-pub fn start_game(game: Arc<Mutex<Game>>){
+pub fn start_game(game: Arc<Mutex<Game>>, player_1: u8, player_2: u8){
     let mut g = game.lock().unwrap();
     if g.running {
         println!("game is already running");
@@ -31,27 +31,28 @@ pub fn start_game(game: Arc<Mutex<Game>>){
     g.board = board::Board::new_board(1);
     drop(g);
     thread::spawn(move || {
-        run(game)
+        run(game, player_1, player_2)
     });
 }
 
 
-fn run(game: Arc<Mutex<Game>>) {
+fn run(game: Arc<Mutex<Game>>, p1: u8, p2: u8) {
     let mut result;
     let mut moves = 0;
     let mut player_turn;
     let mut board;
-    let player_1 = players::Player::new(1, 0);
-    let player_2 = players::Player::new(-1, 0);
+    let mut p_move;
+    let player_1 = players::Player::new(1, p1);
+    let player_2 = players::Player::new(-1, p2);
 
     loop {
+        moves += 1;
+
         let g = game.lock().unwrap();
         player_turn = g.board.turn;
         board = g.board.clone();
         drop(g);
 
-        moves += 1;
-        let p_move;
         if player_turn == 1 {
             p_move = player_1.run(&board);
         } else {

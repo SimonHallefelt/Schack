@@ -35,8 +35,12 @@ fn run_ui(ui: appWindow, game: Arc<Mutex<Game>>) -> Result<(), slint::PlatformEr
 
     ui.on_start_game({
         let game = Arc::clone(&game);
+        let ui = ui.as_weak();
         move || {
-            game::start_game(Arc::clone(&game));
+            let ui = ui.upgrade().unwrap();
+            let p1 = ui.get_player_1() as u8;
+            let p2 = ui.get_player_2() as u8;
+            game::start_game(Arc::clone(&game), p1, p2);
         }
     });
 

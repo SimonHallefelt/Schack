@@ -32,6 +32,8 @@ export component appWindow inherits Window {
     callback start_game();
 
     in-out property <int> counter;
+    in-out property <int> player_1: 0;
+    in-out property <int> player_2: 0;
     in-out property <[bool]> square_clicked: [false];
     in-out property <[bool]> possible_move: [false];
     in-out property <[image]> piece_positions: [@image-url("../icons/white-pawn.png")];
