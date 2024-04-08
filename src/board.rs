@@ -24,7 +24,7 @@
     3 - draw
 */
 
-use std::collections::{HashSet};
+use std::collections::HashSet;
 
 #[derive(Clone)]
 pub struct Board {

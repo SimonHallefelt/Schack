@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::{sync::{Arc, Mutex}, thread};
 use rand::seq::SliceRandom;
 
 use crate::board;
@@ -20,10 +20,6 @@ impl Game {
     pub fn get_board(&self) -> Vec<Vec<i8>> {
         self.board.board.clone()
     }
-
-    pub fn get_running(&self) -> bool {
-        self.running
-    }
 }
 
 
@@ -35,7 +31,9 @@ pub fn start_game(game: Arc<Mutex<Game>>){
     }
     g.board = board::Board::new_board(1);
     drop(g);
-    run(game)
+    thread::spawn(move || {
+        run(game)
+    });
 }
 
 
@@ -81,6 +79,5 @@ fn run(game: Arc<Mutex<Game>>) {
             println!("Stats, total moves {}", moves);
             break;
         }
-        player_turn *= -1;
     }
 }

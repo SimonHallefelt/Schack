@@ -35,7 +35,6 @@ fn run_ui(ui: appWindow, game: Arc<Mutex<Game>>) -> Result<(), slint::PlatformEr
 
     ui.on_start_game({
         let game = Arc::clone(&game);
-        let ui = ui.as_weak();
         move || {
             game::start_game(Arc::clone(&game));
         }

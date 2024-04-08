@@ -62,7 +62,7 @@ fn legal_king_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, ll:
     }
 
     // Castling
-    let possible_castle_moves = legal_castle_moves(board, start, player, castle_pieces);
+    let possible_castle_moves = legal_castle_moves(board, start, castle_pieces);
     for m in possible_castle_moves {
         let mut b = board.clone();
         b[start.0][m[0]] = b[start.0][start.1];
@@ -263,7 +263,7 @@ fn possible_direction_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player:
     legal_moves
 }
 
-fn legal_castle_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, castle_pieces: &HashSet<(usize,usize)>) -> Vec<Vec<usize>> {
+fn legal_castle_moves(board: &Vec<Vec<i8>>, start: (usize, usize), castle_pieces: &HashSet<(usize,usize)>) -> Vec<Vec<usize>> {
     let mut possible_moves = vec![];
     if castle_pieces.contains(&start) {
         if castle_pieces.contains(&(start.0, 0)) {
@@ -306,19 +306,6 @@ mod tests {
             vec![0, 0, 0, 0, 0, 0, 0, 0],
             vec![-1,-1,-1,-1,-1,-1,-1,-1],
             vec![-4,-2,-3,-5,-6,-3,-2,-4]
-        ]
-    }
-
-    fn get_empty_board() -> Vec<Vec<i8>> {
-        vec![
-            vec![0, 0, 0, 0, 0, 0, 0, 0],
-            vec![0, 0, 0, 0, 0, 0, 0, 0],
-            vec![0, 0, 0, 0, 0, 0, 0, 0],
-            vec![0, 0, 0, 0, 0, 0, 0, 0],
-            vec![0, 0, 0, 0, 0, 0, 0, 0],
-            vec![0, 0, 0, 0, 0, 0, 0, 0],
-            vec![0, 0, 0, 0, 0, 0, 0, 0],
-            vec![0, 0, 0, 0, 0, 0, 0, 0]
         ]
     }
 
