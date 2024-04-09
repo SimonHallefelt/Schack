@@ -28,15 +28,9 @@ fn run_ui(ui: appWindow, game: Arc<Mutex<Game>>) -> Result<(), slint::PlatformEr
     let g_time = game.clone();
     let time = Timer::default();
     time.start(TimerMode::Repeated, std::time::Duration::from_millis(10), move || {
-        // let mut game = g_time.lock();
-        // if let Ok(ref mut mutex) = game {
         if let Ok(g) = g_time.lock() {
-            // let g = game.unwrap();
             let ui = ui_time.upgrade().unwrap().as_weak();
             update_board(g.get_board(), ui);
-            // println!("ui, time, did get lock")
-        } else {
-            // println!("ui, time, not get lock")
         }
     });
 

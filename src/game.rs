@@ -1,13 +1,13 @@
 use std::{sync::{Arc, Mutex}, thread, time};
 
-use crate::board::{self, Board};
+use crate::{board::{self, Board}, players::Player};
 use crate::players;
 
 pub struct Game {
     running: bool,
     board: board::Board,
-    clicks: Vec<Vec<usize>>,
-    promote_to: usize,
+    player_1: Player,
+    player_2: Player,
 }
 
 impl Game {
@@ -15,8 +15,8 @@ impl Game {
         Game {
             running: false,
             board: board,
-            clicks: Vec::new(),
-            promote_to: 0,
+            player_1: players::Player::new(1, 0),
+            player_2: players::Player::new(1, 0),
         }
     }
 
@@ -24,11 +24,16 @@ impl Game {
         self.board.board.clone()
     }
 
-    pub fn clicked(&mut self, click: Vec<usize>) {
-        if self.clicks.len() == 2 {
-            self.clicks[0] = self.clicks.pop().unwrap();
+    fn get_active_player(&mut self) -> &mut Player {
+        if self.board.turn == 1 {
+            &mut self.player_1
+        } else {
+            &mut self.player_2
         }
-        self.clicks.push(click);
+    }
+
+    pub fn clicked(&mut self, click: Vec<usize>) {
+        self.get_active_player().clicked(click);
     }
 }
 
@@ -40,38 +45,35 @@ pub fn start_game(game: Arc<Mutex<Game>>, player_1: i32, player_2: i32){
         return;
     }
     g.board = board::Board::new_board(1);
+    g.player_1 = players::Player::new(1, player_1 as u8);
+    g.player_2 = players::Player::new(-1, player_2 as u8);
     drop(g);
     thread::spawn(move || {
-        run(game, player_1 as u8, player_2 as u8)
+        run(game)
     });
 }
 
 
-fn run(game: Arc<Mutex<Game>>, p1: u8, p2: u8) {
+fn run(game: Arc<Mutex<Game>>) {
+    println!("start new game");
     let mut result;
     let mut moves = 0;
     let mut player_turn;
     let mut board;
     let mut p_move;
-    let player_1 = players::Player::new(1, p1);
-    let player_2 = players::Player::new(-1, p2);
 
     loop {
         moves += 1;
 
-        let g = game.lock().unwrap();
+        let mut g = game.lock().unwrap();
         player_turn = g.board.turn;
         board = g.board.clone();
+        g.get_active_player().clear_clicks();
         drop(g);
 
-        if player_turn == 1 {
-            // p_move = player_1.run(&board);
-            p_move = movee(Arc::clone(&game), &player_1, &board);
-        } else {
-            // p_move = player_2.run(&board);
-            p_move = movee(Arc::clone(&game), &player_2, &board);
-        }
-        
+        p_move = movee(Arc::clone(&game), &board);
+        // thread::sleep(time::Duration::from_millis(1));
+
         let mut g = game.lock().unwrap();
         println!("Player {} moves from {:?} to {:?}", player_turn, vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]]);
         result = g.board.update_board(vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]], p_move[4] as i8);
@@ -84,15 +86,18 @@ fn run(game: Arc<Mutex<Game>>, p1: u8, p2: u8) {
     }
 }
 
-fn movee(game: Arc<Mutex<Game>>, player: &players::Player, board: &Board) -> Vec<usize> {
-    if player.get_player_type() != 1 { // not human
-        return player.run(board, (Vec::new(), 0));
+fn movee(game: Arc<Mutex<Game>>, board: &Board) -> Vec<usize> {
+    let mut g = game.lock().unwrap();
+    if g.get_active_player().get_player_type() != 1 { // not human
+        return g.get_active_player().run(board, (Vec::new(), 0));
     }
+    drop(g);
 
     loop {
         let mut g = game.lock().unwrap();
-        if g.clicks.len() != 2 {
-            assert!(g.clicks.len() < 2);
+        let player = g.get_active_player();
+        if player.get_clicks().len() != 2 {
+            assert!(player.get_clicks().len() < 2);
             drop(g);
             thread::sleep(time::Duration::from_millis(10));
             continue;
@@ -103,16 +108,15 @@ fn movee(game: Arc<Mutex<Game>>, player: &players::Player, board: &Board) -> Vec
         // wait for a promotion target
         // }
 
-        let mut movee = g.clicks[0].clone();
-        movee.extend(&g.clicks[1]);
-        let m = player.run(board, (movee, g.promote_to));
-        println!("hej, movee, m = {:?}", m);
+        let mut movee = player.get_clicks()[0].clone();
+        movee.extend(&player.get_clicks()[1]);
+        let m = player.run(board, (movee, player.get_promote_to()));
+        // println!("hej, movee, m = {:?}", m);
         if m.is_empty() {
             drop(g);
             thread::sleep(time::Duration::from_millis(10));
             continue;
         }
-        g.clicks = Vec::new();
         return m;
     }
 }
