@@ -79,7 +79,7 @@ impl Board {
         if self.board[end[0]][end[1]].abs() == 1 && (end[0] == 0 || end[0] == 7) {
             if promote_to < 2 || promote_to > 5 {
                 println!("illegal promotion, promotion: {}", promote_to * player);
-                return 2 * player;
+                return player * 2 * -1
             }
             self.board[end[0]][end[1]] = promote_to * player;
         }

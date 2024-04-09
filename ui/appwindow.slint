@@ -29,9 +29,9 @@ component boardSquare inherits Rectangle{
 }
 
 export component appWindow inherits Window {
-    callback start_game();
+    callback start_game(int, int);
+    callback board_square_clicked(int);
 
-    in-out property <int> counter;
     in-out property <int> player_1: 0;
     in-out property <int> player_2: 0;
     in-out property <[bool]> square_clicked: [false];
@@ -42,12 +42,20 @@ export component appWindow inherits Window {
     default-font-size: 15px;
     VerticalBox {
         Text {
-            text: "counter: \{counter}";
+            text: "Select type for player 2";
         }
-        Button {
-            text: "increase counter";
-            clicked => {
-                counter += 1;
+        HorizontalBox {
+            Button {
+                text: "Random";
+                clicked => {
+                    player_2 = 0;
+                }
+            }
+            Button {
+                text: "Human";
+                clicked => {
+                    player_2 = 1;
+                }
             }
         }
         Text {
@@ -68,14 +76,31 @@ export component appWindow inherits Window {
                 square_size: square_size;
 
                 clicked => {
-                    square_clicked[i] = !square_clicked[i];
+                    root.board_square_clicked(i);
+                }
+            }
+        }
+        Text {
+            text: "Select type for player 1";
+        }
+        HorizontalBox {
+            Button {
+                text: "Random";
+                clicked => {
+                    player_1 = 0;
+                }
+            }
+            Button {
+                text: "Human";
+                clicked => {
+                    player_1 = 1;
                 }
             }
         }
         Button {
-            text: "Start Game";
+            text: "New Game";
             clicked => {
-                root.start_game();
+                root.start_game(player_1, player_2);
             }
         }
     }

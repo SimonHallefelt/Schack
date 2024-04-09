@@ -28,27 +28,39 @@ fn run_ui(ui: appWindow, game: Arc<Mutex<Game>>) -> Result<(), slint::PlatformEr
     let g_time = game.clone();
     let time = Timer::default();
     time.start(TimerMode::Repeated, std::time::Duration::from_millis(10), move || {
-        let game = g_time.lock().unwrap();
-        let ui = ui_time.upgrade().unwrap().as_weak();
-        update_board(game.get_board(), ui);
+        // let mut game = g_time.lock();
+        // if let Ok(ref mut mutex) = game {
+        if let Ok(g) = g_time.lock() {
+            // let g = game.unwrap();
+            let ui = ui_time.upgrade().unwrap().as_weak();
+            update_board(g.get_board(), ui);
+            // println!("ui, time, did get lock")
+        } else {
+            // println!("ui, time, not get lock")
+        }
     });
 
     ui.on_start_game({
         let game = Arc::clone(&game);
-        let ui = ui.as_weak();
-        move || {
-            let ui = ui.upgrade().unwrap();
-            let p1 = ui.get_player_1() as u8;
-            let p2 = ui.get_player_2() as u8;
-            game::start_game(Arc::clone(&game), p1, p2);
+        move |player_type_1, player_type_2| {
+            game::start_game(Arc::clone(&game), player_type_1, player_type_2);
+        }
+    });
+
+    ui.on_board_square_clicked({
+        let ui_weak = ui.as_weak().clone();
+        move |num| {
+            board_clicked(ui_weak.clone(), Arc::clone(&game), num as usize);
         }
     });
 
     ui.run()
 }
 
-fn update_board(board: Vec<Vec<i8>>, ui2: slint::Weak<appWindow>) {
-    let ui = ui2.upgrade().unwrap();
+
+
+fn update_board(board: Vec<Vec<i8>>, ui_weak: slint::Weak<appWindow>) {
+    let ui = ui_weak.upgrade().unwrap();
     let mut piece_positions = vec![];
     for i in (0..8).rev() {
         for j in 0..8 {
@@ -78,4 +90,28 @@ fn get_piece_name(num: i8) -> String {
         -6 => "icons\\black-king.png".to_string(),
         _ => "icons\\empty.png".to_string(),
     }
+}
+
+fn board_clicked(ui_weak: slint::Weak<appWindow>, game: Arc<Mutex<Game>>, num: usize) {
+    let ui = ui_weak.upgrade().unwrap();
+    let p = num_to_pos(num);
+    let mut clicked = vec![];
+    for i in (0..8).rev() {
+        for j in 0..8 {
+            if i == p[0] && j == p[1] {
+                clicked.push(true);
+            } else {
+                clicked.push(false);
+            }
+        }
+    }
+    ui.set_square_clicked(ModelRc::new(VecModel::from(clicked)));
+    let mut g = game.lock().unwrap();
+    g.clicked(p);
+}
+
+fn num_to_pos(num: usize) -> Vec<usize> {
+    let col = num % 8;
+    let row = 7 - (num / 8);
+    vec![row, col]
 }
