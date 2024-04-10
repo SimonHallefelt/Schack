@@ -4,7 +4,6 @@ use crate::{board::{self, Board}, players::Player};
 use crate::players;
 
 pub struct Game {
-    running: bool,
     board: board::Board,
     player_1: Player,
     player_2: Player,
@@ -13,7 +12,6 @@ pub struct Game {
 impl Game {
     pub fn new_game(board: board::Board) -> Game {
         Game {
-            running: false,
             board: board,
             player_1: players::Player::new(1, 0),
             player_2: players::Player::new(1, 0),
@@ -48,10 +46,6 @@ impl Game {
 
 pub fn start_game(game: Arc<Mutex<Game>>, player_1: i32, player_2: i32){
     let mut g = game.try_lock().unwrap();
-    if g.running {
-        println!("game is already running");
-        return;
-    }
     g.board = board::Board::new_board(1);
     g.player_1 = players::Player::new(1, player_1 as u8);
     g.player_2 = players::Player::new(-1, player_2 as u8);

@@ -54,16 +54,16 @@ impl Board {
     }
 
     pub fn update_board(&mut self, start: Vec<usize>, end: Vec<usize>, promote_to: i8) -> i8 {
-        // print_board(&self.board);
         if self.board[start[0]][start[1]] == 0 {
             println!("no piece at start");
-            return 2 * self.turn * -1;
+            game_ended(self, start, end, promote_to);
+            return self.turn * 2 * -1;
         }
         let player = self.board[start[0]][start[1]] / self.board[start[0]][start[1]].abs();
         let b = self.board.clone();
         if !legal_move(self, &start, &end, player, true) {
             println!("illegal move, start: {:?}, end: {:?}", start, end);
-            print_board(&self.board);
+            game_ended(self, start, end, promote_to);
             return player * 2 * -1
         }
         self.castle_pieces.remove(&(start[0], start[1]));
@@ -79,12 +79,12 @@ impl Board {
         if self.board[end[0]][end[1]].abs() == 1 && (end[0] == 0 || end[0] == 7) {
             if promote_to < 2 || promote_to > 5 {
                 println!("illegal promotion, promotion: {}", promote_to * player);
+                game_ended(self, start, end, promote_to);
                 return player * 2 * -1
             }
             self.board[end[0]][end[1]] = promote_to * player;
         }
         self.turn *= -1;
-        print_board(&self.board);
         if won(&self.board, &self.board_history, self.turn) {
             return player;
         }
@@ -94,6 +94,13 @@ impl Board {
         0
     }
 
+}
+
+fn game_ended(board: &Board, start: Vec<usize>, end: Vec<usize>, promote_to: i8) {
+    println!("game_ended");
+    println!("move history: {:?}", board.board_history);
+    println!("start: {:?}, end: {:?}, promote_to: {:?}", start, end, promote_to);
+    print_board(&board.board);
 }
 
 fn legal_move(board: &mut Board, start: &Vec<usize>, end: &Vec<usize>, player: i8, check_checker: bool) -> bool {
