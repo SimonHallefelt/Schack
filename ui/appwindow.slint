@@ -31,11 +31,11 @@ component boardSquare inherits Rectangle{
 export component appWindow inherits Window {
     callback start_game(int, int);
     callback board_square_clicked(int);
+    callback white_promote_to(int);
+    callback black_promote_to(int);
 
-    in-out property <int> player_1: 0;
-    in-out property <int> player_2: 0;
-    in-out property <int> player_1_promot_to: 5;
-    in-out property <int> player_2_promot_to: 5;
+    in-out property <int> white: 0;
+    in-out property <int> black: 0;
     in-out property <[bool]> square_clicked: [false];
     in-out property <[bool]> possible_move: [false];
     in-out property <[image]> piece_positions: [@image-url("../icons/white-pawn.png")];
@@ -48,8 +48,8 @@ export component appWindow inherits Window {
                 height: (square_size + 5px) * 8;
                 width: (square_size + 5px) * 8;
                 for s[i] in 64 : boardSquare {
-                    x: (square_size+5px) * Math.mod(i, 8);
-                    y: (square_size+5px) * Math.floor(i / 8);
+                    x: (square_size + 5px) * Math.mod(i, 8);
+                    y: (square_size + 5px) * Math.floor(i / 8);
                     height: square_size;
                     width: square_size;
                     position_even: Math.mod(Math.mod(i, 8) + Math.floor(i / 8), 2) == 0;
@@ -63,46 +63,104 @@ export component appWindow inherits Window {
                     }
                 }
             }
-        }
-        VerticalBox {
-            Text {
-                text: "Select type for player 2";
-            }
-            HorizontalBox {
-                Button {
-                    text: "Random";
-                    clicked => {
-                        player_2 = 0;
-                    }
-                }
-                Button {
-                    text: "Human";
-                    clicked => {
-                        player_2 = 1;
-                    }
-                }
-            }
-            Text {
-                text: "Select type for player 1";
-            }
-            HorizontalBox {
-                Button {
-                    text: "Random";
-                    clicked => {
-                        player_1 = 0;
-                    }
-                }
-                Button {
-                    text: "Human";
-                    clicked => {
-                        player_1 = 1;
-                    }
-                }
-            }
             Button {
                 text: "New Game";
                 clicked => {
-                    root.start_game(player_1, player_2);
+                    root.start_game(white, black);
+                }
+            }
+        }
+        VerticalBox {
+            Text {
+                text: "Select type for black";
+            }
+            HorizontalBox {
+                Button {
+                    text: "Random";
+                    clicked => {
+                        black = 0;
+                    }
+                }
+                Button {
+                    text: "Human";
+                    clicked => {
+                        black = 1;
+                    }
+                }
+            }
+            Text {
+                text: "Select promotion type for black";
+            }
+            HorizontalBox {
+                Button {
+                    text: "knigth";
+                    clicked => {
+                        black_promote_to(2);
+                    }
+                }
+                Button {
+                    text: "bishop";
+                    clicked => {
+                        black_promote_to(3);
+                    }
+                }
+                Button {
+                    text: "rook";
+                    clicked => {
+                        black_promote_to(4);
+                    }
+                }
+                Button {
+                    text: "queen";
+                    clicked => {
+                        black_promote_to(5);
+                    }
+                }
+            }
+            Text {
+                text: "Select type for white";
+            }
+            HorizontalBox {
+                Button {
+                    text: "Random";
+                    clicked => {
+                        white = 0;
+                    }
+                }
+                Button {
+                    text: "Human";
+                    clicked => {
+                        white = 1;
+                    }
+                }
+            }
+            Text {
+                text: "Select promotion type for white";
+            }
+            HorizontalBox {
+                Button {
+                    text: "knigth";
+                    clicked => {
+                        white_promote_to(2);
+                    }
+                }
+                Button {
+                    text: "bishop";
+                    clicked => {
+                        white_promote_to(3);
+                    }
+                }
+                Button {
+                    text: "rook";
+                    clicked => {
+                        white_promote_to(4);
+                    }
+                }
+                Button {
+                    text: "queen";
+                    clicked => {
+                        white_promote_to(5);
+                    }
                 }
             }
         }

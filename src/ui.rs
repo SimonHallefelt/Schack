@@ -43,8 +43,23 @@ fn run_ui(ui: appWindow, game: Arc<Mutex<Game>>) -> Result<(), slint::PlatformEr
 
     ui.on_board_square_clicked({
         let ui_weak = ui.as_weak().clone();
+        let g = Arc::clone(&game);
         move |num| {
-            board_clicked(ui_weak.clone(), Arc::clone(&game), num as usize);
+            board_clicked(ui_weak.clone(), Arc::clone(&g), num as usize);
+        }
+    });
+
+    ui.on_white_promote_to({
+        let g = game.clone();
+        move |num| {
+            set_promote(1, Arc::clone(&g), num as usize);
+        }
+    });
+
+    ui.on_black_promote_to({
+        let g = game.clone();
+        move |num| {
+            set_promote(-1, Arc::clone(&g), num as usize);
         }
     });
 
@@ -108,4 +123,9 @@ fn num_to_pos(num: usize) -> Vec<usize> {
     let col = num % 8;
     let row = 7 - (num / 8);
     vec![row, col]
+}
+
+fn set_promote(player: i32, game: Arc<Mutex<Game>>, num: usize) {
+    let mut g = game.lock().unwrap();
+    g.set_promote(player, num);
 }

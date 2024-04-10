@@ -35,6 +35,14 @@ impl Game {
     pub fn clicked(&mut self, click: Vec<usize>) {
         self.get_active_player().clicked(click);
     }
+
+    pub fn set_promote(&mut self, player: i32, promote_to: usize) {
+        if player == 1 {
+            self.player_1.set_promote_to(promote_to)
+        } else {
+            self.player_2.set_promote_to(promote_to)
+        }
+    }
 }
 
 
@@ -111,7 +119,6 @@ fn movee(game: Arc<Mutex<Game>>, board: &Board) -> Vec<usize> {
         let mut movee = player.get_clicks()[0].clone();
         movee.extend(&player.get_clicks()[1]);
         let m = player.run(board, (movee, player.get_promote_to()));
-        // println!("hej, movee, m = {:?}", m);
         if m.is_empty() {
             drop(g);
             thread::sleep(time::Duration::from_millis(10));

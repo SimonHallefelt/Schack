@@ -16,7 +16,7 @@ impl Player {
             player: player,
             player_type: player_type,
             clicks: Vec::new(),
-            promote_to: 0,
+            promote_to: 5, // should be '0' as default
         }
     }
 
