@@ -55,9 +55,9 @@ fn legal_king_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, ll:
         b[m.0][m.1] = b[start.0][start.1];
         b[start.0][start.1] = 0;
         if !ll {
-            legal_moves.push(vec![start.0, start.1, m.0, m.1]);
+            legal_moves.push(vec![start.0, start.1, m.0, m.1, 0]);
         } else if !in_check(&b, player) {
-            legal_moves.push(vec![start.0, start.1, m.0, m.1]);
+            legal_moves.push(vec![start.0, start.1, m.0, m.1, 0]);
         }
     }
 
@@ -70,9 +70,9 @@ fn legal_king_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, ll:
         b[start.0][m[2]] = b[start.0][m[1]];
         b[start.0][m[1]] = 0;
         if !ll {
-            legal_moves.push(vec![start.0, start.1, start.0, m[0]]);
+            legal_moves.push(vec![start.0, start.1, start.0, m[0], 0]);
         } else if !in_check(&b, player) {
-            legal_moves.push(vec![start.0, start.1, start.0, m[0]]);
+            legal_moves.push(vec![start.0, start.1, start.0, m[0], 0]);
         }
     }
 
@@ -125,9 +125,9 @@ fn legal_knight_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, l
         b[m.0][m.1] = b[start.0][start.1];
         b[start.0][start.1] = 0;
         if !ll {
-            legal_moves.push(vec![start.0, start.1, m.0, m.1]);
+            legal_moves.push(vec![start.0, start.1, m.0, m.1, 0]);
         } else if !in_check(&b, player) {
-            legal_moves.push(vec![start.0, start.1, m.0, m.1]);
+            legal_moves.push(vec![start.0, start.1, m.0, m.1, 0]);
         }
     }
     // println!("hej, knight, amount of legal moves: {}", legal_moves.len());
@@ -177,9 +177,9 @@ fn legal_pawn_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, sta
                     b[(start.0 as i8 + dir) as usize][i] = b[start.0][start.1];
                     b[start.0][start.1] = 0;
                     if !ll {
-                        legal_moves.push(vec![start.0, start.1, (start.0 as i8 + dir) as usize, i]);
+                        legal_moves.push(vec![start.0, start.1, (start.0 as i8 + dir) as usize, i, 0]);
                     } else if !in_check(&b, player) {
-                        legal_moves.push(vec![start.0, start.1, (start.0 as i8 + dir) as usize, i]);
+                        legal_moves.push(vec![start.0, start.1, (start.0 as i8 + dir) as usize, i, 0]);
                     }
                 }
             }
@@ -191,9 +191,15 @@ fn legal_pawn_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, sta
         b[m.0][m.1] = b[start.0][start.1];
         b[start.0][start.1] = 0;
         if !ll {
-            legal_moves.push(vec![start.0, start.1, m.0, m.1]);
+            legal_moves.push(vec![start.0, start.1, m.0, m.1, 0]);
         } else if !in_check(&b, player) {
-            legal_moves.push(vec![start.0, start.1, m.0, m.1]);
+            if m.0 == 0 || m.0 == 7 {
+                for i in 2..6 {
+                    legal_moves.push(vec![start.0, start.1, m.0, m.1, i]);
+                }
+            } else {
+                legal_moves.push(vec![start.0, start.1, m.0, m.1, 0]);
+            }
         }
     }
     // println!("hej, pawn, amount of legal moves: {}", legal_moves.len());
@@ -255,9 +261,9 @@ fn possible_direction_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player:
         b[m.0][m.1] = b[start.0][start.1];
         b[start.0][start.1] = 0;
         if !ll {
-            legal_moves.push(vec![start.0, start.1, m.0, m.1]);
+            legal_moves.push(vec![start.0, start.1, m.0, m.1, 0]);
         } else if !in_check(&b, player) {
-            legal_moves.push(vec![start.0, start.1, m.0, m.1]);
+            legal_moves.push(vec![start.0, start.1, m.0, m.1, 0]);
         }
     }
     legal_moves

@@ -86,9 +86,11 @@ impl Board {
         }
         self.turn *= -1;
         if won(&self.board, &self.board_history, self.turn) {
+            print_board(&self.board);
             return player;
         }
         if draw(&self.board, &self.board_history, self.turn, self.fifty_move_rule) {
+            print_board(&self.board);
             return 3;
         }
         0
