@@ -87,6 +87,12 @@ export component appWindow inherits Window {
                         black = 1;
                     }
                 }
+                Button {
+                    text: "Bot";
+                    clicked => {
+                        black = 2;
+                    }
+                }
             }
             Text {
                 text: "Select promotion type for black (select type before move)";
@@ -131,6 +137,12 @@ export component appWindow inherits Window {
                     text: "Human";
                     clicked => {
                         white = 1;
+                    }
+                }
+                Button {
+                    text: "Bot";
+                    clicked => {
+                        white = 2;
                     }
                 }
             }
