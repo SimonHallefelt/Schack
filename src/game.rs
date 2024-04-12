@@ -74,8 +74,6 @@ fn run(game: Arc<Mutex<Game>>) {
         drop(g);
 
         p_move = movee(Arc::clone(&game), &board);
-        // println!("hej, sleep");
-        // thread::sleep(time::Duration::from_millis(10));
 
         let mut g = game.lock().unwrap();
         println!("Player {} moves from {:?} to {:?}", player_turn, vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]]);

@@ -35,7 +35,7 @@ pub struct Board {
     pub castle_pieces: HashSet<(usize,usize)>
 }
 
-impl Board {
+impl Board { // dose not implement draw for 'same board 3 times'
 
     pub fn new_board(starting_player: i8) -> Board {
         let mut board = vec![vec![0; 8]; 8];

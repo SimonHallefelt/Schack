@@ -5,19 +5,32 @@ use crate::legal_moves::get_all_legal_moves;
 pub fn run(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, castle_pieces: &HashSet<(usize,usize)>) -> Vec<usize> {
     let mut best_move = Vec::new();
     let board = prep_board(board, player);
-    let board_history = vec![prep_board(board_history.last().unwrap(), player)];
-    let alm = get_all_legal_moves(&board, &board_history, 1, castle_pieces); // upgrade, give random order
+    let bh;
+    if board_history.is_empty() {
+        bh = vec![]
+    } else {
+        bh = vec![prep_board(board_history.last().unwrap(), player)];
+    }
+    let mut cp = HashSet::new();
+    if player == 1 {
+        cp = castle_pieces.clone();
+    } else {
+        for p in castle_pieces {
+            cp.insert((7-p.0,p.1));
+        }
+    }
+    let alm = get_all_legal_moves(&board, &bh, 1, &cp); // upgrade, give random order
+
     let mut alpha = -10000;
     let beta = 10000;
     let mut hm = HashMap::new();
-
     let mut new_board;
     let mut new_castle_pieces;
     let new_board_history = vec![board.clone()];
     let mut a;
     for lm in alm {
         new_board = board.clone();
-        new_castle_pieces = castle_pieces.clone();
+        new_castle_pieces = cp.clone();
         make_move(&lm, &mut new_board, &mut new_castle_pieces);
         a = alpha_beta(&new_board, alpha, beta, -1, 4, &new_castle_pieces, &new_board_history, &mut hm);
 
@@ -103,9 +116,6 @@ fn make_move(movee: &Vec<usize>, board: &mut Vec<Vec<i8>>, castle_pieces: &mut H
             board[movee[2]][movee[3]-1] = board[movee[0]][7];
             board[movee[0]][7] = 0;
         }
-        castle_pieces.remove(&(movee[0],0));
-        castle_pieces.remove(&(movee[0],4));
-        castle_pieces.remove(&(movee[0],7));
     }
 
     board[movee[2]][movee[3]] = board[movee[0]][movee[1]];
@@ -114,6 +124,9 @@ fn make_move(movee: &Vec<usize>, board: &mut Vec<Vec<i8>>, castle_pieces: &mut H
     if board[movee[2]][movee[3]].abs() == 1 && movee[4] != 0 { // promote
         board[movee[2]][movee[3]] *= movee[4] as i8;
     }
+
+    castle_pieces.remove(&(movee[0], movee[1]));
+    castle_pieces.remove(&(movee[2], movee[3]));
 }
 
 fn in_check(board: &Vec<Vec<i8>>, player: i8) -> bool {

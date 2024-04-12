@@ -282,9 +282,10 @@ fn legal_castle_moves(board: &Vec<Vec<i8>>, start: (usize, usize), castle_pieces
             if can_castle {
                 possible_moves.push(vec![start.1 - 2, 0, start.1 - 1]);
             }
-        } else if castle_pieces.contains(&(start.0, 7)) {
+        } 
+        if castle_pieces.contains(&(start.0, 7)) {
             let mut can_castle = true;
-            for i in start.1 + 1..7 {
+            for i in (start.1 + 1)..7 {
                 if board[start.0][i] != 0 {
                     can_castle = false;
                 }
@@ -345,5 +346,16 @@ mod tests {
         castle_pieces.insert((0, 0));
         let legal_moves = get_all_legal_moves(&board, &vec![], 1, &castle_pieces);
         assert_eq!(legal_moves.len(), 8*2+3+2+1);
+    }
+
+    #[test]
+    fn castle_2() {
+        let mut board = get_new_board();
+        board[0] = vec![0, 0, 0, 0, 6, 0, 0, 4];
+        let mut castle_pieces = HashSet::new();
+        castle_pieces.insert((0, 4));
+        castle_pieces.insert((0, 7));
+        let legal_moves = get_all_legal_moves(&board, &vec![], 1, &castle_pieces);
+        assert_eq!(legal_moves.len(), 8*2+2+2+1);
     }
 }
