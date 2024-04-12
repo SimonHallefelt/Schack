@@ -18,7 +18,7 @@ pub fn get_all_legal_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>
         }
     }
 
-    println!("Number of legal moves: {}", legal_moves.len());
+    // println!("Number of legal moves: {}", legal_moves.len());
     legal_moves
 }
 

@@ -45,7 +45,7 @@ impl Game {
 
 
 pub fn start_game(game: Arc<Mutex<Game>>, player_1: i32, player_2: i32){
-    let mut g = game.try_lock().unwrap();
+    let mut g = game.lock().unwrap();
     g.board = board::Board::new_board(1);
     g.player_1 = players::Player::new(1, player_1 as u8);
     g.player_2 = players::Player::new(-1, player_2 as u8);
@@ -74,7 +74,8 @@ fn run(game: Arc<Mutex<Game>>) {
         drop(g);
 
         p_move = movee(Arc::clone(&game), &board);
-        // thread::sleep(time::Duration::from_millis(1));
+        // println!("hej, sleep");
+        // thread::sleep(time::Duration::from_millis(10));
 
         let mut g = game.lock().unwrap();
         println!("Player {} moves from {:?} to {:?}", player_turn, vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]]);
@@ -90,10 +91,13 @@ fn run(game: Arc<Mutex<Game>>) {
 
 fn movee(game: Arc<Mutex<Game>>, board: &Board) -> Vec<usize> {
     let mut g = game.lock().unwrap();
-    if g.get_active_player().get_player_type() != 1 { // not human
-        return g.get_active_player().run(board, (Vec::new(), 0));
-    }
+    let player_turn = g.board.turn;
+    let player_type = g.get_active_player().get_player_type();
     drop(g);
+
+    if player_type != 1 { // not human
+        return players::run(player_turn, player_type, board, (Vec::new(), 0));
+    }
 
     loop {
         let mut g = game.lock().unwrap();
@@ -105,16 +109,12 @@ fn movee(game: Arc<Mutex<Game>>, board: &Board) -> Vec<usize> {
             continue;
         }
 
-        // if {
-        // when a pawn gets promoted
-        // wait for a promotion target
-        // }
-
         let mut movee = player.get_clicks()[0].clone();
         movee.extend(&player.get_clicks()[1]);
-        let m = player.run(board, (movee, player.get_promote_to()));
+        let promote = player.get_promote_to();
+        drop(g);
+        let m = players::run(player_turn, player_type, board, (movee, promote));
         if m.is_empty() {
-            drop(g);
             thread::sleep(time::Duration::from_millis(10));
             continue;
         }

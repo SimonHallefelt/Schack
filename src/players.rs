@@ -47,12 +47,12 @@ impl Player {
     pub fn clear_clicks(&mut self) {
         self.clicks = Vec::new();
     }
+}
 
-    pub fn run(&self, board: &Board, movee: (Vec<usize>, usize)) -> Vec<usize> {
-        match self.player_type {
-            2 => bot::run(),
-            1 => human::run(get_all_legal_moves(&board.board, &board.board_history, self.player, &board.castle_pieces), movee),
-            _ => random::run(get_all_legal_moves(&board.board, &board.board_history, self.player, &board.castle_pieces)),
-        }
+pub fn run(player: i8, player_type: u8, board: &Board, movee: (Vec<usize>, usize)) -> Vec<usize> {
+    match player_type {
+        2 => bot::run(&board.board, &board.board_history, player, &board.castle_pieces),
+        1 => human::run(get_all_legal_moves(&board.board, &board.board_history, player, &board.castle_pieces), movee),
+        _ => random::run(get_all_legal_moves(&board.board, &board.board_history, player, &board.castle_pieces)),
     }
 }
