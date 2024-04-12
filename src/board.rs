@@ -116,7 +116,7 @@ fn legal_move(board: &mut Board, start: &Vec<usize>, end: &Vec<usize>, player: i
     }
     if board.board[end[0]][end[1]] != 0 {
         if board.board[end[0]][end[1]] / (board.board[end[0]][end[1]]).abs() == player {
-            println!("illegal move, end position occupied by own piece");
+            // println!("illegal move, end position occupied by own piece");
             return false;
         }
     }
@@ -425,7 +425,7 @@ fn player_in_check(board: &Vec<Vec<i8>>, player: i8) -> bool {
 
 fn won(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> bool {
     if !player_in_check(board, player) {
-        println!("hej, won, player not in check");
+        // println!("hej, won, player not in check");
         return false;
     }
     let mut players_piece_positions = vec![];
@@ -445,7 +445,7 @@ fn won(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> b
         fifty_move_rule: 0,
         castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
     // print_board(&b.board);
-    println!("hej, won, search for a legal opponent move");
+    // println!("hej, won, search for a legal opponent move");
     for start in players_piece_positions {
         // println!("hej, won, start: {:?}", start);
         for i in 0..8 {
@@ -455,7 +455,7 @@ fn won(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> b
                 let s = start.clone();
                 // println!("hej, won, s: {:?}, end: {:?}", s, end);
                 if legal_move(&mut bb, &s, &end, player, true) {
-                    println!("hej, won, no legal move, false");
+                    // println!("hej, won, no legal move, false");
                     return false;
                 }
             }

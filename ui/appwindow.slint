@@ -1,5 +1,19 @@
 import { Button, VerticalBox, HorizontalBox, GroupBox } from "std-widgets.slint";
-// import { Window, Rectangle, Text, Image, TouchArea } from "std-widgets.slint";
+
+component powerBar inherits Rectangle {
+    in property <length> square_size;
+    in property <float> power_balance: 0.5;
+
+    background: #000000;
+
+    Rectangle {
+        background: #ffffff;
+        y: parent.height * power_balance;
+        height: parent.height - (parent.height * power_balance);
+        width: parent.width;
+        animate width { duration: 5000ms; easing: ease-in; }
+    }
+}
 
 component boardSquare inherits Rectangle{
     callback clicked();
@@ -29,6 +43,9 @@ component boardSquare inherits Rectangle{
 }
 
 export component appWindow inherits Window {
+    title: @tr("Chess");
+    // icon: @image-url("");
+
     callback start_game(int, int);
     callback board_square_clicked(int);
     callback white_promote_to(int);
@@ -39,10 +56,17 @@ export component appWindow inherits Window {
     in-out property <[bool]> square_clicked: [false];
     in-out property <[bool]> possible_move: [false];
     in-out property <[image]> piece_positions: [@image-url("../icons/white-pawn.png")];
+    in property <float> power_balance: 0.5;
     property <length> square_size: 80px;
 
     default-font-size: 15px;
     HorizontalBox {
+        powerBar {
+            height: (square_size + 5px) * 8;
+            width: square_size / 2;
+            square_size: square_size;
+            power_balance: (1 - power_balance);
+        }
         VerticalBox {
             Rectangle {
                 height: (square_size + 5px) * 8;

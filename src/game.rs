@@ -7,6 +7,7 @@ pub struct Game {
     board: board::Board,
     player_1: Player,
     player_2: Player,
+    power_balance: f32,
 }
 
 impl Game {
@@ -15,6 +16,7 @@ impl Game {
             board: board,
             player_1: players::Player::new(1, 0),
             player_2: players::Player::new(1, 0),
+            power_balance: 0.5, // 0-1
         }
     }
 
@@ -28,6 +30,10 @@ impl Game {
         } else {
             &mut self.player_2
         }
+    }
+
+    pub fn get_power_balance(&self) -> f32{
+        self.power_balance
     }
 
     pub fn clicked(&mut self, click: Vec<usize>) {
@@ -71,6 +77,7 @@ fn run(game: Arc<Mutex<Game>>) {
         player_turn = g.board.turn;
         board = g.board.clone();
         g.get_active_player().clear_clicks();
+        g.power_balance = calculate_power_balance(&board);
         drop(g);
 
         p_move = movee(Arc::clone(&game), &board);
@@ -117,5 +124,31 @@ fn movee(game: Arc<Mutex<Game>>, board: &Board) -> Vec<usize> {
             continue;
         }
         return m;
+    }
+}
+
+fn calculate_power_balance(board: &Board) -> f32 {
+    let mut p1 = 1;
+    let mut p2 = 1;
+    for row in board.board.iter() {
+        for piece in row.iter() {
+            if *piece > 0 {
+                p1 += piece_score(*piece);
+            } else {
+                p2 += piece_score(*piece);
+            }
+        }
+    }
+    (p1 as f32) / (p1 + p2) as f32
+}
+
+fn piece_score(piece: i8) -> i32 {
+    match piece.abs() {
+        5 => 7,
+        4 => 5,
+        3 => 3,
+        2 => 3,
+        1 => 1,
+        _ => 0
     }
 }

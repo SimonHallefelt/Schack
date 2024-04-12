@@ -29,7 +29,9 @@ fn run_ui(ui: appWindow, game: Arc<Mutex<Game>>) -> Result<(), slint::PlatformEr
     let time = Timer::default();
     time.start(TimerMode::Repeated, std::time::Duration::from_millis(1), move || {
         if let Ok(g) = g_time.lock() {
-            let ui = ui_time.upgrade().unwrap().as_weak();
+            let ui = ui_time.upgrade().unwrap();
+            ui.set_power_balance(g.get_power_balance());
+            let ui = ui.as_weak();
             update_board(g.get_board(), ui);
         }
     });
