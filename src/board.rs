@@ -24,18 +24,19 @@
     3 - draw
 */
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Clone)]
 pub struct Board {
     pub board: Vec<Vec<i8>>,
     pub board_history: Vec<Vec<Vec<i8>>>,
+    pub board_repeated: HashMap<Vec<Vec<i8>>, i8>,
     pub turn: i8,
     pub fifty_move_rule: i16,
     pub castle_pieces: HashSet<(usize,usize)>
 }
 
-impl Board { // dose not implement draw for 'same board 3 times'
+impl Board {
 
     pub fn new_board(starting_player: i8) -> Board {
         let mut board = vec![vec![0; 8]; 8];
@@ -44,9 +45,12 @@ impl Board { // dose not implement draw for 'same board 3 times'
         board[6] = vec![-1; 8];
         board[7] = vec![-4,-2,-3,-5,-6,-3,-2,-4];
         print_board(&board);
+        let mut hm = HashMap::new();
+        hm.insert(board.clone(), 1);
         Board {
             board: board,
             board_history: vec![],
+            board_repeated: hm,
             turn: starting_player,
             fifty_move_rule: 0,
             castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()
@@ -89,7 +93,7 @@ impl Board { // dose not implement draw for 'same board 3 times'
             print_board(&self.board);
             return player;
         }
-        if draw(&self.board, &self.board_history, self.turn, self.fifty_move_rule) {
+        if draw(&self.board, &self.board_history, &mut self.board_repeated, self.turn, self.fifty_move_rule) {
             print_board(&self.board);
             return 3;
         }
@@ -404,6 +408,7 @@ fn player_in_check(board: &Vec<Vec<i8>>, player: i8) -> bool {
                 let mut b = Board { 
                     board: board.clone(), 
                     board_history: vec![], 
+                    board_repeated: HashMap::new(),
                     turn: player*-1, 
                     fifty_move_rule: 0,
                     castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
@@ -434,8 +439,8 @@ fn won(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> b
 
     let b = Board { 
         board: board.clone(), 
-        board_history: 
-        board_history.clone(), 
+        board_history: board_history.clone(), 
+        board_repeated: HashMap::new(),
         turn: player, 
         fifty_move_rule: 0,
         castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
@@ -460,10 +465,19 @@ fn won(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> b
     true
 }
 
-fn draw(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, fifty_move_rule: i16) -> bool {
+fn draw(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, board_repeated: &mut HashMap<Vec<Vec<i8>>, i8>, player: i8, fifty_move_rule: i16) -> bool {
     if fifty_move_rule >= 50 {
         println!("hej, draw, 50 moves since last capture");
         return true;
+    }
+    if board_repeated.contains_key(board) {
+        board_repeated.insert(board.clone(), board_repeated.get(board).unwrap() + 1);
+        if *board_repeated.get(board).unwrap() == 3 {
+            println!("hej, draw, same board 3 times");
+            return true;
+        }
+    } else {
+        board_repeated.insert(board.clone(), 1);
     }
     if player_in_check(board, player) {
         println!("hej, draw, player is in check");
@@ -486,7 +500,8 @@ fn no_opponent_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, pl
 
     let b = Board { 
         board: board.clone(), 
-        board_history: board_history.clone(), 
+        board_history: board_history.clone(),
+        board_repeated: HashMap::new(), 
         turn: player, 
         fifty_move_rule: 0,
         castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
@@ -837,7 +852,7 @@ mod tests {
     #[test]
     fn draw_1() {
         let board = Board::new_board(1);
-        assert_eq!(draw(&board.board, &board.board_history, 1, 0), false);
+        assert_eq!(draw(&board.board, &board.board_history, &mut HashMap::new(), 1, 0), false);
     }
 
     #[test]
@@ -845,7 +860,7 @@ mod tests {
         let mut board = Board::new_board(-1);
         board.board[0] = vec![6,0,0,0,0,0,0,0];
         board.board[1] = vec![0,0,-5,0,0,0,0,0];
-        assert_eq!(draw(&board.board, &board.board_history, 1, 0), true);
+        assert_eq!(draw(&board.board, &board.board_history, &mut HashMap::new(), 1, 0), true);
     }
 
 }
