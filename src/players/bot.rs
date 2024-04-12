@@ -1,5 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
+use rand::Rng;
+
 use crate::legal_moves::get_all_legal_moves;
 
 pub fn run(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, castle_pieces: &HashSet<(usize,usize)>) -> Vec<usize> {
@@ -9,7 +11,11 @@ pub fn run(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, 
     if board_history.is_empty() {
         bh = vec![]
     } else {
-        bh = vec![prep_board(board_history.last().unwrap(), player)];
+        if player == 1 {
+            bh = vec![board_history.last().unwrap().clone()];
+        } else {
+            bh = vec![prep_board(board_history.last().unwrap(), player)];
+        }
     }
     let mut cp = HashSet::new();
     if player == 1 {
@@ -19,10 +25,10 @@ pub fn run(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, 
             cp.insert((7-p.0,p.1));
         }
     }
-    let alm = get_all_legal_moves(&board, &bh, 1, &cp); // upgrade, give random order
+    let alm = shuffle_vec(get_all_legal_moves(&board, &bh, 1, &cp));
 
-    let mut alpha = -10000;
-    let beta = 10000;
+    let mut alpha = -100000;
+    let beta = 100000;
     let mut hm = HashMap::new();
     let mut new_board;
     let mut new_castle_pieces;
@@ -45,6 +51,7 @@ pub fn run(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, 
         best_move[2] = 7-best_move[2];
     }
 
+    println!("best_move = {:?}, alpha = {}", best_move, alpha-900);
     best_move
 }
 
@@ -248,6 +255,15 @@ fn prep_board(board: &Vec<Vec<i8>>, player: i8) -> Vec<Vec<i8>> {
         new_board.push(row);
     }
     new_board
+}
+
+fn shuffle_vec(mut vec: Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+    let mut rng = rand::thread_rng();
+    for i in 0..vec.len() {
+        let j = rng.gen_range(0..vec.len());
+        vec.swap(i, j);
+    }
+    vec
 }
 
 fn piece_score(piece: i8) -> i32 {
