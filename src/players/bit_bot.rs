@@ -58,6 +58,7 @@ pub fn run(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 
 struct BitBoard {
+    depth: i32,
     player: i8,
     white_king: u64,
     white_queen: u64,
@@ -84,6 +85,7 @@ struct BitBoard {
 impl BitBoard {
     fn new() -> BitBoard {
         BitBoard {
+            depth: 0,
             player: 1,
             white_king: 0,
             white_queen: 0,
@@ -156,6 +158,7 @@ impl BitBoard {
             _ => (),
         }
 
+        self.depth += 1;
         self.player *= -1;
     }
 }
@@ -217,7 +220,7 @@ fn setup_and_start(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, cast
 
 
     // get best move
-    let best_move = alpha(bb, 4); // best_move: [from, to, piece, promote]
+    let best_move = alpha(bb, 5); // best_move: [from, to, piece, promote]
 
     // format move
     let mut m: Vec<usize> = Vec::new();
@@ -235,7 +238,7 @@ fn setup_and_start(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, cast
 
 
 fn alpha(bit_board: BitBoard, depth: i32) -> Vec<u64> {
-    println!("start score = {}", score(&bit_board));
+    println!("start score = {}", score(&bit_board)-900);
 
     let mut alpha = -100000;
     let beta = alpha*-1;
@@ -263,7 +266,7 @@ fn alpha(bit_board: BitBoard, depth: i32) -> Vec<u64> {
 
 fn alpha_beta(bit_board: &BitBoard, hm: &mut HashMap<BitBoard, i32>, mut alpha: i32, mut beta: i32, player: i8, depth: i32) -> i32 {
     if depth == 0 {
-        return score(bit_board) + depth;
+        return score(bit_board);
     }
     if hm.contains_key(bit_board) {
         return *hm.get(bit_board).unwrap();
@@ -614,6 +617,54 @@ fn piece_score(piece: i8) -> i32 {
 mod tests {
     use super::*;
 
+    fn print_bit_board(bb: BitBoard) {
+        let mut b = Vec::new();
+        for i in 0..8 {
+            let mut row = Vec::new();
+            for j in 0..8 {
+                let pos = 1 << (i*8+j);
+                if bb.white_pawns & pos != 0 {
+                    row.push(1);
+                } else if bb.white_knights & pos != 0 {
+                    row.push(2);
+                } else if bb.white_bishops & pos != 0 {
+                    row.push(3);
+                } else if bb.white_rooks & pos != 0 {
+                    row.push(4);
+                } else if bb.white_queen & pos != 0 {
+                    row.push(5);
+                } else if bb.white_king & pos != 0 {
+                    row.push(6);
+                } else if bb.black_pawns & pos != 0 {
+                    row.push(-1);
+                } else if bb.black_knights & pos != 0 {
+                    row.push(-2);
+                } else if bb.black_bishops & pos != 0 {
+                    row.push(-3);
+                } else if bb.black_rooks & pos != 0 {
+                    row.push(-4);
+                } else if bb.black_queen & pos != 0 {
+                    row.push(-5);
+                } else if bb.black_king & pos != 0 {
+                    row.push(-6);
+                } else {
+                    row.push(0);
+                }
+            }
+            b.push(row);
+        }
+        for r in b.iter().rev() {
+            for p in r {
+                if *p < 0 {
+                    print!("{} ", p);
+                } else {
+                    print!(" {} ", p);
+                }
+            }
+            println!()
+        }
+    }
+
     #[test]
     fn in_check_1() {
         let mut board = vec![
@@ -653,8 +704,29 @@ mod tests {
     }
 
     #[test]
+    fn in_check_3() {
+        let mut board = vec![
+            vec![ 0,-6, 0,-3, 0, 0, 0, 0],
+            vec![ 0, 0, 0, 0, 0, 0, 0, 0],
+            vec![ 0, 0, 0, 0, 0, 0, 0, 0],
+            vec![-1, 0,-1, 3, 0,-1, 0, 0],
+            vec![ 0,-1, 0, 0, 0, 1, 0, 0],
+            vec![ 0, 4, 0, 0, 0, 0, 0, 2],
+            vec![ 0, 0, 0, 0, 0, 0, 0, 0],
+            vec![ 0, 2, 3, 0, 6, 0, 0, 0],
+        ];
+        board.reverse();
+        let board_history = vec![];
+        let castle_pieces = HashSet::new();
+        let result = run(&board, &board_history, -1, &castle_pieces);
+        assert_ne!(result, vec![7, 1, 7, 0, 0]);
+        assert_ne!(result, vec![7, 1, 6, 1, 0]);
+    }
+
+    #[test]
     fn queen_moves_1() {
-        let bb = BitBoard { player: 1, 
+        let bb = BitBoard { depth: 0,
+                                    player: 1, 
                                     white_king: 1, 
                                     white_queen: 16, 
                                     white_rooks: 0, 
@@ -672,6 +744,57 @@ mod tests {
         let qm = queen_moves(&bb);
         println!("{:?}", qm);
         assert_eq!(qm.len(), 3+4+7+3+2);
+    }
+
+    #[test]
+    fn bishop_moves_1() {
+        let bb = BitBoard { depth: 0,
+                                    player: -1, 
+                                    white_king: 2, 
+                                    white_queen: 0, 
+                                    white_rooks: 0, 
+                                    white_bishops: 0, 
+                                    white_knights: 1 << 8*1+5, 
+                                    white_pawns: 0, 
+                                    black_king: 1 << 8*5+5, 
+                                    black_queen: 0, 
+                                    black_rooks: 0, 
+                                    black_bishops: 1 << 8*3+3, 
+                                    black_knights: 0, 
+                                    black_pawns: 0, 
+                                    white_pieces: 2+(1 << 8*1+5), 
+                                    black_pieces: ((1 as u64) << 8*5+5)+((1 as u64) << 8*3+3)};
+        let bm = bishop_moves(&bb);
+        println!("{:?}", bm);
+        println!("bit_board = {:?}", bb);
+        print_bit_board(bb);
+        assert_eq!(bm.len(), 3+3+1+2);
+    }
+
+    #[test]
+    fn bishop_moves_2() {
+        let bb = BitBoard { depth: 0,
+                                    player: -1, 
+                                    white_king: 1, 
+                                    white_queen: 0, 
+                                    white_rooks: 0, 
+                                    white_bishops: 8, 
+                                    white_knights: 0, 
+                                    white_pawns: 9210691584, 
+                                    black_king: 1152921504606846976, 
+                                    black_queen: 0, 
+                                    black_rooks: 2199023255552, 
+                                    black_bishops: 288230376285929472, 
+                                    black_knights: 144255925564211200, 
+                                    black_pawns: 137438953472, 
+                                    white_pieces: 9210691593, 
+                                    black_pieces: 1585410142919196672 };
+        let bm = bishop_moves(&bb);
+        println!("{:?}", bm);
+        println!("bit_board = {:?}", bb);
+        print_bit_board(bb);
+        assert_eq!(bm.len(), 3+1+4+3 + 2+2);
+        assert!(bm.contains(&vec![1 << 8*3+3, 1, 3, 0]));
     }
 
     #[test]
