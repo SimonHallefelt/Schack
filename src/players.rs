@@ -1,6 +1,7 @@
 mod random;
 mod human;
 mod bot;
+mod bit_bot;
 use crate::legal_moves::get_all_legal_moves;
 use crate::board::Board;
 
@@ -51,6 +52,7 @@ impl Player {
 
 pub fn run(player: i8, player_type: u8, board: &Board, movee: (Vec<usize>, usize)) -> Vec<usize> {
     match player_type {
+        3 => bit_bot::run(&board.board, &board.board_history, player, &board.castle_pieces),
         2 => bot::run(&board.board, &board.board_history, player, &board.castle_pieces),
         1 => human::run(get_all_legal_moves(&board.board, &board.board_history, player, &board.castle_pieces), movee),
         _ => random::run(get_all_legal_moves(&board.board, &board.board_history, player, &board.castle_pieces)),
