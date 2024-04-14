@@ -413,7 +413,7 @@ fn player_in_check(board: &Vec<Vec<i8>>, player: i8) -> bool {
                     fifty_move_rule: 0,
                     castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
                 if legal_move(&mut b, &start, &end, player * -1, false) {
-                    println!("hej, player in check, true, player: {}, start: {:?}, end: {:?}", player, start, end);
+                    // println!("hej, player in check, true, player: {}, start: {:?}, end: {:?}", player, start, end);
                     return true;
                 }
             }
@@ -480,7 +480,7 @@ fn draw(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, board_repeated:
         board_repeated.insert(board.clone(), 1);
     }
     if player_in_check(board, player) {
-        println!("hej, draw, player is in check");
+        // println!("hej, draw, player is in check");
         return false;
     }
     let no_opponent_moves = no_opponent_moves(board, board_history, player);
