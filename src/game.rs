@@ -1,10 +1,9 @@
 use std::{sync::{Arc, Mutex}, thread, time::{self, Instant}};
 
-use crate::{board::{self, Board}, players::Player};
-use crate::players;
+use crate::{board::Board, players::{self, Player}};
 
 pub struct Game {
-    board: board::Board,
+    board: Board,
     player_1: Player,
     player_2: Player,
     power_balance: f32,
@@ -13,11 +12,11 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new_game(board: board::Board) -> Game {
+    pub fn new_game(board: Board) -> Game {
         Game {
             board: board,
-            player_1: players::Player::new(1, 0),
-            player_2: players::Player::new(1, 0),
+            player_1: Player::new(1, 0),
+            player_2: Player::new(1, 0),
             power_balance: 0.5, // 0-1
             result: 0,
             id: 0,
@@ -56,9 +55,9 @@ impl Game {
 
 pub fn start_game(game: Arc<Mutex<Game>>, player_1: i32, player_2: i32) {
     let mut g = game.lock().unwrap();
-    g.board = board::Board::new_board(1);
-    g.player_1 = players::Player::new(1, player_1 as u8);
-    g.player_2 = players::Player::new(-1, player_2 as u8);
+    g.board = Board::new_board(1);
+    g.player_1 = Player::new(1, player_1 as u8);
+    g.player_2 = Player::new(-1, player_2 as u8);
     g.result = 0;
     g.id += 1;
     let id = g.id;
@@ -87,10 +86,13 @@ fn run(game: Arc<Mutex<Game>>, id: u64) {
         g.power_balance = calculate_power_balance(&board);
         drop(g);
 
+        let start_time = Instant::now();
         p_move = movee(Arc::clone(&game), &board, id);
+        let elapsed_time = start_time.elapsed();
 
         let mut g = game.lock().unwrap();
         if g.id != id { break; }
+        g.get_active_player().add_time(elapsed_time.as_millis());
         println!("Player {} moves from {:?} to {:?}", player_turn, vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]]);
         result = g.board.update_board(vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]], p_move[4] as i8);
 
@@ -98,6 +100,8 @@ fn run(game: Arc<Mutex<Game>>, id: u64) {
             g.result = result;
             println!("Game end, result {}", result);
             println!("Stats, total moves {}", moves);
+            println!("Player white, total time {}ms, slowest move {}ms", g.player_1.get_total_time(), g.player_1.get_slowest_move());
+            println!("Player black, total time {}ms, slowest move {}ms", g.player_2.get_total_time(), g.player_2.get_slowest_move());
             break;
         }
     }
@@ -181,36 +185,36 @@ mod tests {
     }
 
     // #[test]
-    fn random_vs_random() {
+    fn _random_vs_random() {
         for _ in 0..100 {
-            let game = Arc::new(Mutex::new(Game::new_game(board::Board::new_board(1))));
+            let game = Arc::new(Mutex::new(Game::new_game(Board::new_board(1))));
             start_game(Arc::clone(&game), 0, 0);
             _check_legal_game(Arc::clone(&game));
         }
     }
 
     // #[test]
-    fn random_vs_bot() {
+    fn _random_vs_bot() {
         for _ in 0..10 {
-            let game = Arc::new(Mutex::new(Game::new_game(board::Board::new_board(1))));
+            let game = Arc::new(Mutex::new(Game::new_game(Board::new_board(1))));
             start_game(Arc::clone(&game), 0, 2);
             _check_legal_game(Arc::clone(&game));
         }
     }
 
     // #[test]
-    fn random_vs_bit_bot() {
+    fn _random_vs_bit_bot() {
         for _ in 0..10 {
-            let game = Arc::new(Mutex::new(Game::new_game(board::Board::new_board(1))));
+            let game = Arc::new(Mutex::new(Game::new_game(Board::new_board(1))));
             start_game(Arc::clone(&game), 0, 3);
             _check_legal_game(Arc::clone(&game));
         }
     }
 
     // #[test]
-    fn bot_vs_bit_bot() {
+    fn _bot_vs_bit_bot() {
         for _ in 0..10 {
-            let game = Arc::new(Mutex::new(Game::new_game(board::Board::new_board(1))));
+            let game = Arc::new(Mutex::new(Game::new_game(Board::new_board(1))));
             start_game(Arc::clone(&game), 2, 3);
             _check_legal_game(Arc::clone(&game));
         }

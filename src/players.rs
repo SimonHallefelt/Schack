@@ -10,6 +10,8 @@ pub struct Player {
     player_type: u8,
     clicks: Vec<Vec<usize>>,
     promote_to: usize,
+    total_time: u128,
+    slowest_move: u128,
 }
 
 impl Player {
@@ -19,6 +21,8 @@ impl Player {
             player_type: player_type,
             clicks: Vec::new(),
             promote_to: 5, // should be '0' as default
+            total_time: 0,
+            slowest_move: 0,
         }
     }
 
@@ -36,6 +40,21 @@ impl Player {
 
     pub fn get_clicks(&self) -> &Vec<Vec<usize>> {
         &self.clicks
+    }
+
+    pub fn get_total_time(&self) -> u128 {
+        self.total_time
+    }
+
+    pub fn get_slowest_move(&self) -> u128 {
+        self.slowest_move
+    }
+
+    pub fn add_time(&mut self, time: u128) {
+        self.total_time += time;
+        if time > self.slowest_move {
+            self.slowest_move = time;
+        }
     }
 
     pub fn clicked(&mut self, click: Vec<usize>) {
