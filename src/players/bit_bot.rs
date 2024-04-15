@@ -111,12 +111,12 @@ impl BitBoard {
     }
 
     fn make_move(&mut self, m: &Vec<u64>) { // m: [from, to, piece, promote]
-        // dose not handle castling, en passant, or promotion
+        // dose not handle castling or en passant
 
         let from = m[0];
         let to = m[1];
         let piece = m[2];
-        // let promote = m[3];
+        let promote = m[3];
 
         if self.player == 1 {
             self.white_pieces ^= from ^ to;
@@ -142,20 +142,39 @@ impl BitBoard {
             }
         }
 
-        match piece as i8 * self.player {
-            1 => self.white_pawns ^= from ^ to,
-            2 => self.white_knights ^= from ^ to,
-            3 => self.white_bishops ^= from ^ to,
-            4 => self.white_rooks ^= from ^ to,
-            5 => self.white_queen ^= from ^ to,
-            6 => self.white_king ^= from ^ to,
-            -1 => self.black_pawns ^= from ^ to,
-            -2 => self.black_knights ^= from ^ to,
-            -3 => self.black_bishops ^= from ^ to,
-            -4 => self.black_rooks ^= from ^ to,
-            -5 => self.black_queen ^= from ^ to,
-            -6 => self.black_king ^= from ^ to,
-            _ => (),
+        if promote == 0 {
+            match piece as i8 * self.player {
+                1 => self.white_pawns ^= from ^ to,
+                2 => self.white_knights ^= from ^ to,
+                3 => self.white_bishops ^= from ^ to,
+                4 => self.white_rooks ^= from ^ to,
+                5 => self.white_queen ^= from ^ to,
+                6 => self.white_king ^= from ^ to,
+                -1 => self.black_pawns ^= from ^ to,
+                -2 => self.black_knights ^= from ^ to,
+                -3 => self.black_bishops ^= from ^ to,
+                -4 => self.black_rooks ^= from ^ to,
+                -5 => self.black_queen ^= from ^ to,
+                -6 => self.black_king ^= from ^ to,
+                _ => (),
+            }
+        } else {
+            match self.player {
+                1 => self.white_pawns ^= from,
+                -1 => self.black_pawns ^= from,
+                _ => (),
+            }
+            match promote as i8 * self.player {
+                2 => self.white_knights ^= to,
+                3 => self.white_bishops ^= to,
+                4 => self.white_rooks ^= to,
+                5 => self.white_queen ^= to,
+                -2 => self.black_knights ^= to,
+                -3 => self.black_bishops ^= to,
+                -4 => self.black_rooks ^= to,
+                -5 => self.black_queen ^= to,
+                _ => (),
+            }
         }
 
         self.depth += 1;
@@ -310,7 +329,7 @@ fn alpha_beta(bit_board: &BitBoard, hm: &mut HashMap<BitBoard, i32>, mut alpha: 
 }
 
 fn all_legal_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> { // moves: [move: [from, to, piece, promote]]
-    // get all legal moves for player, dose not look at castling, en passant, promotion, or check
+    // get all legal moves for player, dose not look at castling, en passant, or check
     let mut moves = Vec::new();
     moves.extend(pawn_moves(bit_board));
     moves.extend(knight_moves(bit_board));
@@ -321,7 +340,7 @@ fn all_legal_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> { // moves: [move: [fr
     moves
 }
 
-fn pawn_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> { // dose not look at en passant or promotion
+fn pawn_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> { // dose not look at en passant
     let mut moves = Vec::new();
     let dir;
     let start_row;
@@ -357,19 +376,38 @@ fn pawn_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> { // dose not look at en pa
         }
         // attack
         let col = p%8;
+        let row = p/8;
         if col > 0 && (1 << to - 1) & opponent_pieces != 0 {
-            moves.push(vec![1 << p, 1 << to - 1, 1, 0]);
+            if row == 7-start_row {
+                for promote in 2..6 {
+                    moves.push(vec![1 << p, 1 << to - 1, 1, promote]);
+                }
+            } else {
+                moves.push(vec![1 << p, 1 << to - 1, 1, 0]);
+            }
         }
         if col < 7 && (1 << to + 1) & opponent_pieces != 0 {
-            moves.push(vec![1 << p, 1 << to + 1, 1, 0]);
+            if row == 7-start_row {
+                for promote in 2..6 {
+                    moves.push(vec![1 << p, 1 << to + 1, 1, promote]);
+                }
+            } else {
+                moves.push(vec![1 << p, 1 << to + 1, 1, 0]);
+            }
         }
         // move forward
         if (1 << to) & (my_pieces | opponent_pieces) == 0 {
-            moves.push(vec![1 << p, 1 << to, 1, 0]);
-            if p/8 == start_row {
-                to += dir;
-                if (1 << to) & (my_pieces | opponent_pieces) == 0 {
-                    moves.push(vec![1 << p, 1 << to, 1, 0]);
+            if row == 7-start_row {
+                for promote in 2..6 {
+                    moves.push(vec![1 << p, 1 << to, 1, promote]);
+                }
+            } else {
+                moves.push(vec![1 << p, 1 << to, 1, 0]);
+                if row == start_row {
+                    to += dir;
+                    if (1 << to) & (my_pieces | opponent_pieces) == 0 {
+                        moves.push(vec![1 << p, 1 << to, 1, 0]);
+                    }
                 }
             }
         }
@@ -798,12 +836,34 @@ mod tests {
     }
 
     #[test]
-    fn en_passant() {
-        assert!(false);
+    fn promotion() {
+        let bb = BitBoard { depth: 0,
+                                    player: -1, 
+                                    white_king: 1, 
+                                    white_queen: 0, 
+                                    white_rooks: 0, 
+                                    white_bishops: 64, 
+                                    white_knights: 0, 
+                                    white_pawns: 0, 
+                                    black_king: 4, 
+                                    black_queen: 0, 
+                                    black_rooks: 0, 
+                                    black_bishops: 0, 
+                                    black_knights: 0, 
+                                    black_pawns: 1 << 8*1+5, 
+                                    white_pieces: 1 + 64, 
+                                    black_pieces: (1 << 8*1+5) + 4 };
+        let pm = pawn_moves(&bb);
+        println!("{:?}", pm);
+        println!("bit_board = {:?}", bb);
+        print_bit_board(bb);
+        assert_eq!(pm.len(), 4+4);
+        assert!(pm.contains(&vec![1 << 8*1+5, 32, 1, 2]));
+        assert!(pm.contains(&vec![1 << 8*1+5, 64, 1, 5]));
     }
 
     #[test]
-    fn promotion() {
+    fn en_passant() {
         assert!(false);
     }
 
