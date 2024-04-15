@@ -434,14 +434,14 @@ fn knight_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> {
         if (1 << k) & knights == 0 {
             continue;
         }
+        let col = k%8;
         for d in dir.iter() {
             let to = k as i32 + d;
-            let row_diff = (k/8 - to/8).abs(); // remove?
-            let col_diff = (k%8 - to%8).abs();
-            if to < 0 || to > 63 || row_diff > 2 || col_diff > 2 || row_diff + col_diff != 3 {
+            let col_diff = (col - to%8).abs();
+            if to < 0 || to > 63 || col_diff > 2 {
                 continue;
             }
-            if (1 << to) & pieces != 0 {
+            if (1 << to) & pieces != 0 { 
                 continue;
             }
             moves.push(vec![1 << k, 1 << to, 2, 0]);
@@ -521,11 +521,11 @@ fn king_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> { // dose not look at castl
         pieces = bit_board.black_pieces;
     }
 
+    let col = king%8;
     for d in dir.iter() {
         let to = king as i32 + d;
-        let row_diff = (king/8 - to/8).abs(); // remove?
-        let col_diff = (king%8 - to%8).abs();
-        if to < 0 || to > 63 || row_diff > 1 || col_diff > 1 {
+        let col_diff = (col - to%8).abs();
+        if to < 0 || to > 63 || col_diff > 1 {
             continue;
         }
         if (1 << to) & pieces != 0 {
@@ -833,6 +833,56 @@ mod tests {
         print_bit_board(bb);
         assert_eq!(bm.len(), 3+1+4+3 + 2+2);
         assert!(bm.contains(&vec![1 << 8*3+3, 1, 3, 0]));
+    }
+
+    #[test]
+    fn knight_moves_1() {
+        let bb = BitBoard { depth: 0,
+                                    player: 1, 
+                                    white_king: 4, 
+                                    white_queen: 0, 
+                                    white_rooks: 0, 
+                                    white_bishops: 1 << (2*8+2), 
+                                    white_knights: 2, 
+                                    white_pawns: 0, 
+                                    black_king: 1 << (1*8+0), 
+                                    black_queen: 0, 
+                                    black_rooks: 0, 
+                                    black_bishops: 0, 
+                                    black_knights: 1 << (2*8), 
+                                    black_pawns: 0, 
+                                    white_pieces: 4 + (1 << (2*8+2)) + 2, 
+                                    black_pieces: (1 << (1*8+0)) + (1 << (2*8)) };
+        let km = knight_moves(&bb);
+        println!("{:?}", km);
+        println!("bit_board = {:?}", bb);
+        print_bit_board(bb);
+        assert_eq!(km.len(), 2);
+    }
+
+    #[test]
+    fn king_moves_1() {
+        let bb = BitBoard { depth: 0,
+                                    player: 1, 
+                                    white_king: 1, 
+                                    white_queen: 0, 
+                                    white_rooks: 0, 
+                                    white_bishops: 0, 
+                                    white_knights: 2, 
+                                    white_pawns: 0, 
+                                    black_king: 1 << (5*8), 
+                                    black_queen: 0, 
+                                    black_rooks: 0, 
+                                    black_bishops: 0, 
+                                    black_knights: 1 << (1*8), 
+                                    black_pawns: 0, 
+                                    white_pieces: 1 + 2, 
+                                    black_pieces: (1 << (5*8)) + (1 << (1*8)) };
+        let km = king_moves(&bb);
+        println!("{:?}", km);
+        println!("bit_board = {:?}", bb);
+        print_bit_board(bb);
+        assert_eq!(km.len(), 2);
     }
 
     #[test]
