@@ -1,4 +1,4 @@
-use std::{sync::{Arc, Mutex}, thread, time};
+use std::{sync::{Arc, Mutex}, thread, time::{self, Instant}};
 
 use crate::{board::{self, Board}, players::Player};
 use crate::players;
@@ -8,6 +8,8 @@ pub struct Game {
     player_1: Player,
     player_2: Player,
     power_balance: f32,
+    result: i8,
+    id: u64,
 }
 
 impl Game {
@@ -17,6 +19,8 @@ impl Game {
             player_1: players::Player::new(1, 0),
             player_2: players::Player::new(1, 0),
             power_balance: 0.5, // 0-1
+            result: 0,
+            id: 0,
         }
     }
 
@@ -50,19 +54,22 @@ impl Game {
 }
 
 
-pub fn start_game(game: Arc<Mutex<Game>>, player_1: i32, player_2: i32){
+pub fn start_game(game: Arc<Mutex<Game>>, player_1: i32, player_2: i32) {
     let mut g = game.lock().unwrap();
     g.board = board::Board::new_board(1);
     g.player_1 = players::Player::new(1, player_1 as u8);
     g.player_2 = players::Player::new(-1, player_2 as u8);
+    g.result = 0;
+    g.id += 1;
+    let id = g.id;
     drop(g);
     thread::spawn(move || {
-        run(game)
+        run(game, id)
     });
 }
 
 
-fn run(game: Arc<Mutex<Game>>) {
+fn run(game: Arc<Mutex<Game>>, id: u64) {
     println!("start new game");
     let mut result;
     let mut moves = 0;
@@ -80,13 +87,15 @@ fn run(game: Arc<Mutex<Game>>) {
         g.power_balance = calculate_power_balance(&board);
         drop(g);
 
-        p_move = movee(Arc::clone(&game), &board);
+        p_move = movee(Arc::clone(&game), &board, id);
 
         let mut g = game.lock().unwrap();
+        if g.id != id { break; }
         println!("Player {} moves from {:?} to {:?}", player_turn, vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]]);
         result = g.board.update_board(vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]], p_move[4] as i8);
 
         if result != 0 {
+            g.result = result;
             println!("Game end, result {}", result);
             println!("Stats, total moves {}", moves);
             break;
@@ -94,7 +103,7 @@ fn run(game: Arc<Mutex<Game>>) {
     }
 }
 
-fn movee(game: Arc<Mutex<Game>>, board: &Board) -> Vec<usize> {
+fn movee(game: Arc<Mutex<Game>>, board: &Board, id: u64) -> Vec<usize> {
     let mut g = game.lock().unwrap();
     let player_turn = g.board.turn;
     let player_type = g.get_active_player().get_player_type();
@@ -106,6 +115,7 @@ fn movee(game: Arc<Mutex<Game>>, board: &Board) -> Vec<usize> {
 
     loop {
         let mut g = game.lock().unwrap();
+        if g.id != id { return Vec::new(); }
         let player = g.get_active_player();
         if player.get_clicks().len() != 2 {
             assert!(player.get_clicks().len() < 2);
@@ -150,5 +160,59 @@ fn piece_score(piece: i8) -> i32 {
         2 => 3,
         1 => 1,
         _ => 0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn _check_legal_game(game: Arc<Mutex<Game>>) {
+        loop {
+            let g = game.lock().unwrap();
+            let r = g.result;
+            drop(g);
+            if r != 0 {
+                assert!(r.abs() != 2);
+                break;
+            }
+            thread::sleep(time::Duration::from_millis(1));
+        }
+    }
+
+    // #[test]
+    fn random_vs_random() {
+        for _ in 0..100 {
+            let game = Arc::new(Mutex::new(Game::new_game(board::Board::new_board(1))));
+            start_game(Arc::clone(&game), 0, 0);
+            _check_legal_game(Arc::clone(&game));
+        }
+    }
+
+    // #[test]
+    fn random_vs_bot() {
+        for _ in 0..10 {
+            let game = Arc::new(Mutex::new(Game::new_game(board::Board::new_board(1))));
+            start_game(Arc::clone(&game), 0, 2);
+            _check_legal_game(Arc::clone(&game));
+        }
+    }
+
+    // #[test]
+    fn random_vs_bit_bot() {
+        for _ in 0..10 {
+            let game = Arc::new(Mutex::new(Game::new_game(board::Board::new_board(1))));
+            start_game(Arc::clone(&game), 0, 3);
+            _check_legal_game(Arc::clone(&game));
+        }
+    }
+
+    // #[test]
+    fn bot_vs_bit_bot() {
+        for _ in 0..10 {
+            let game = Arc::new(Mutex::new(Game::new_game(board::Board::new_board(1))));
+            start_game(Arc::clone(&game), 2, 3);
+            _check_legal_game(Arc::clone(&game));
+        }
     }
 }
