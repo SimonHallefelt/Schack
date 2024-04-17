@@ -33,7 +33,8 @@ pub struct Board {
     pub board_repeated: HashMap<Vec<Vec<i8>>, i8>,
     pub turn: i8,
     pub fifty_move_rule: i16,
-    pub castle_pieces: HashSet<(usize,usize)>
+    pub castle_pieces: HashSet<(usize,usize)>,
+    move_history: Vec<String>,
 }
 
 impl Board {
@@ -53,7 +54,8 @@ impl Board {
             board_repeated: hm,
             turn: starting_player,
             fifty_move_rule: 0,
-            castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()
+            castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>(),
+            move_history: vec![],
         }
     }
 
@@ -64,7 +66,6 @@ impl Board {
             return self.turn * 2 * -1;
         }
         let player = self.board[start[0]][start[1]] / self.board[start[0]][start[1]].abs();
-        let b = self.board.clone();
         if !legal_move(self, &start, &end, player, true) {
             println!("illegal move, start: {:?}, end: {:?}", start, end);
             game_ended(self, start, end, promote_to);
@@ -72,7 +73,8 @@ impl Board {
         }
         self.castle_pieces.remove(&(start[0], start[1]));
         self.castle_pieces.remove(&(end[0], end[1]));
-        self.board_history.push(b);
+        self.board_history.push(self.board.clone());
+        self.move_history.push(format_move(self.board.clone(), start[0], start[1], end[0], end[1], promote_to));
         if self.board[end[0]][end[1]] != 0 || self.board[start[0]][start[1]].abs() == 1{
             self.fifty_move_rule = 0;
         } else {
@@ -98,6 +100,10 @@ impl Board {
             return 3;
         }
         0
+    }
+
+    pub fn get_move_history(&self) -> Vec<String> {
+        self.move_history.clone()
     }
 
 }
@@ -411,7 +417,8 @@ fn player_in_check(board: &Vec<Vec<i8>>, player: i8) -> bool {
                     board_repeated: HashMap::new(),
                     turn: player*-1, 
                     fifty_move_rule: 0,
-                    castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
+                    castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>(),
+                    move_history: vec![]};
                 if legal_move(&mut b, &start, &end, player * -1, false) {
                     // println!("hej, player in check, true, player: {}, start: {:?}, end: {:?}", player, start, end);
                     return true;
@@ -443,7 +450,8 @@ fn won(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> b
         board_repeated: HashMap::new(),
         turn: player, 
         fifty_move_rule: 0,
-        castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
+        castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>(),
+        move_history: vec![]};
     // print_board(&b.board);
     // println!("hej, won, search for a legal opponent move");
     for start in players_piece_positions {
@@ -466,7 +474,7 @@ fn won(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8) -> b
 }
 
 fn draw(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, board_repeated: &mut HashMap<Vec<Vec<i8>>, i8>, player: i8, fifty_move_rule: i16) -> bool {
-    if fifty_move_rule >= 50 {
+    if fifty_move_rule >= 50*2 {
         println!("hej, draw, 50 moves since last capture");
         return true;
     }
@@ -504,7 +512,8 @@ fn no_opponent_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, pl
         board_repeated: HashMap::new(), 
         turn: player, 
         fifty_move_rule: 0,
-        castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>()};
+        castle_pieces: vec![(0,0),(0,4),(0,7), (7,0),(7,4),(7,7)].into_iter().collect::<HashSet<(usize,usize)>>(),
+        move_history: vec![]};
     // print_board(&b.board);
     for start in players_piace_positions {
         for i in 0..8 {
@@ -545,6 +554,46 @@ fn print_board(board: &Vec<Vec<i8>>) {
         }
         println!();
     }
+}
+
+
+
+fn format_move(board: Vec<Vec<i8>>, start_row: usize, start_col: usize, end_row: usize, end_col: usize, promote_to: i8) -> String {
+    let mut s = String::new();
+    let piece = board[start_row][start_col];
+    let piece_name = match piece.abs() {
+        1 => "P",
+        2 => "N",
+        3 => "B",
+        4 => "R",
+        5 => "Q",
+        6 => "K",
+        _ => "",
+    };
+
+    let start = format!("{}{}-", (start_col + 97) as u8 as char, 8 - start_row);
+    let end = format!("{}{}", (end_col + 97) as u8 as char, 8 - end_row);
+
+    if piece.abs() == 1 && (end_row == 0 || end_row == 7){
+        let promote = match promote_to.abs() {
+            2 => "N",
+            3 => "B",
+            4 => "R",
+            5 => "Q",
+            _ => "",
+        };
+        s.push_str(&format!("{}{}{}/{}", piece_name, start, end, promote));
+    } else if piece.abs() == 6 && (start_col as i8 - end_col as i8).abs() == 2 {
+        if start_col < end_col {
+            s.push_str("O-O");
+        } else {
+            s.push_str("O-O-O");
+        }
+    } else {
+        s.push_str(&format!("{}{}{}", piece_name, start, end));
+    }
+
+    s
 }
 
 
