@@ -173,14 +173,16 @@ mod tests {
 
     fn _check_legal_game(game: Arc<Mutex<Game>>) {
         loop {
-            let g = game.lock().unwrap();
-            let r = g.result;
-            drop(g);
+            let g = game.try_lock();
+            if g.is_err() {
+                thread::sleep(time::Duration::from_millis(1));
+                continue;
+            }
+            let r = g.unwrap().result;
             if r != 0 {
                 assert!(r.abs() != 2);
                 break;
             }
-            thread::sleep(time::Duration::from_millis(1));
         }
     }
 

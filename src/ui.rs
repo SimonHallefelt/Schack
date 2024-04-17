@@ -3,8 +3,7 @@ slint::include_modules!();
 use slint::{Model, ModelRc, VecModel, Timer, TimerMode, Image};
 use std::{sync::{Arc, Mutex}, path::Path};
 
-use crate::game;
-use crate::game::Game;
+use crate::game::{self, Game};
 
 pub fn start_ui(game: Game) -> Result<(), slint::PlatformError> {
     let ui = appWindow::new()?;
@@ -28,7 +27,7 @@ fn run_ui(ui: appWindow, game: Arc<Mutex<Game>>) -> Result<(), slint::PlatformEr
     let g_time = game.clone();
     let time = Timer::default();
     time.start(TimerMode::Repeated, std::time::Duration::from_millis(1), move || {
-        if let Ok(g) = g_time.lock() {
+        if let Ok(g) = g_time.try_lock() {
             let ui = ui_time.upgrade().unwrap();
             ui.set_power_balance(g.get_power_balance());
             let ui = ui.as_weak();
