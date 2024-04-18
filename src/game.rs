@@ -1,4 +1,4 @@
-use std::{sync::{Arc, Mutex}, thread, time::{self, Instant}};
+use std::{io::Write, sync::{Arc, Mutex}, thread, time::{self, Instant}};
 
 use crate::{board::Board, players::{self, Player}};
 
@@ -70,7 +70,6 @@ pub fn start_game(game: Arc<Mutex<Game>>, player_1: i32, player_2: i32) {
 
 fn run(game: Arc<Mutex<Game>>, id: u64) {
     println!("start new game");
-    let mut result;
     let mut moves = 0;
     let mut player_turn;
     let mut board;
@@ -94,14 +93,17 @@ fn run(game: Arc<Mutex<Game>>, id: u64) {
         if g.id != id { break; }
         g.get_active_player().add_time(elapsed_time.as_millis());
         println!("Player {} moves from {:?} to {:?}", player_turn, vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]]);
-        result = g.board.update_board(vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]], p_move[4] as i8);
+        g.result = g.board.update_board(vec![p_move[0], p_move[1]], vec![p_move[2], p_move[3]], p_move[4] as i8);
+        println!("move = {}", g.board.get_move_history().last().unwrap());
 
-        if result != 0 {
-            g.result = result;
-            println!("Game end, result {}", result);
+        if g.result != 0 {
+            println!("Game end, result {}", g.result);
             println!("Stats, total moves {}", moves);
             println!("Player white, total time {}ms, slowest move {}ms", g.player_1.get_total_time(), g.player_1.get_slowest_move());
             println!("Player black, total time {}ms, slowest move {}ms", g.player_2.get_total_time(), g.player_2.get_slowest_move());
+            if g.result.abs() != 2 {
+                add_new_data(g.result, g.player_1.get_player_type(), g.player_2.get_player_type(), g.board.get_move_history());
+            }
             break;
         }
     }
@@ -165,6 +167,17 @@ fn piece_score(piece: i8) -> i32 {
         1 => 1,
         _ => 0
     }
+}
+
+
+fn add_new_data(result: i8, player_1: u8, player_2: u8, moves: Vec<String>) {
+    let massage = format!("{} {} {} {}\n", result, player_1, player_2, moves.join(" "));
+    let mut file = std::fs::OpenOptions::new()
+        .append(true)
+        .open("src\\AI\\data\\new_raw_data.txt")
+        .unwrap();
+    //write!(file, "{}", massage).unwrap();
+    file.write_all(massage.as_bytes()).unwrap();
 }
 
 #[cfg(test)]

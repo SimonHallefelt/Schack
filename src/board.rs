@@ -571,8 +571,8 @@ fn format_move(board: Vec<Vec<i8>>, start_row: usize, start_col: usize, end_row:
         _ => "",
     };
 
-    let start = format!("{}{}-", (start_col + 97) as u8 as char, 8 - start_row);
-    let end = format!("{}{}", (end_col + 97) as u8 as char, 8 - end_row);
+    let start = format!("{}{}-", (start_col + 97) as u8 as char, start_row);
+    let end = format!("{}{}", (end_col + 97) as u8 as char, end_row);
 
     if piece.abs() == 1 && (end_row == 0 || end_row == 7){
         let promote = match promote_to.abs() {
