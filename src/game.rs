@@ -39,6 +39,10 @@ impl Game {
         self.power_balance
     }
 
+    pub fn get_result(&self) -> i8 {
+        self.result
+    }
+
     pub fn clicked(&mut self, click: Vec<usize>) {
         self.get_active_player().clicked(click);
     }

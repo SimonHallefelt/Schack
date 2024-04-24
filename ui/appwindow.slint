@@ -123,6 +123,12 @@ export component appWindow inherits Window {
                         black = 3;
                     }
                 }
+                Button {
+                    text: "Bit-Bot-AI";
+                    clicked => {
+                        black = 4;
+                    }
+                }
             }
             Text {
                 text: "Select promotion type for black (select type before move)";
@@ -179,6 +185,12 @@ export component appWindow inherits Window {
                     text: "Bit-Bot";
                     clicked => {
                         white = 3;
+                    }
+                }
+                Button {
+                    text: "Bit-Bot-AI";
+                    clicked => {
+                        white = 4;
                     }
                 }
             }

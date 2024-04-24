@@ -2,10 +2,10 @@
 # raw_data dose not permit to have duplicate data
 
 print("hello1")
-new_raw_data = open("data\\new_raw_data.txt", "r")
+new_raw_data = open("src\\AI\\data\\new_raw_data.txt", "r")
 lines = new_raw_data.readlines()
 
-raw_data = open("data\\raw_data.txt", "r")
+raw_data = open("src\\AI\\data\\raw_data.txt", "r")
 lines2 = raw_data.readlines()
 
 
@@ -19,7 +19,7 @@ for line in lines2:
 
 
 print("hello3")
-raw_data = open("data\\raw_data.txt", "w")
+raw_data = open("src\\AI\\data\\raw_data.txt", "w")
 for line in data:
     raw_data.write(line)
 

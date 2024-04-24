@@ -128,7 +128,7 @@ def make_move(board, piece, start, end, promotion):
 
 
 
-raw_data = open("data\\raw_data.txt", "r")
+raw_data = open("src\\AI\\data\\raw_data.txt", "r")
 matches = raw_data.readlines()
 
 data = []
@@ -186,16 +186,17 @@ for match in matches:
             if i == total_moves - 1:
                 score = 0.0
 
-        data.append((turn, score, bit_board))
+        data.append((score, (turn+1)/2, bit_board))
 
     # print_board(bit_board, turn)
     
 
 
-file = open("data\\data.txt", "w")
+file = open("src\\AI\\data\\data.txt", "w")
 for d in data:
     file.write(str(d[0]) + " " + str(d[1]))
     for value in d[2].values():
         file.write(" " + str(value))
     file.write("\n")
 
+print("Done!")
