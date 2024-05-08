@@ -370,9 +370,13 @@ fn legal_king_move(board: &mut Vec<Vec<i8>>, start: &Vec<usize>, end: &Vec<usize
         if !check_checker {
             return true;
         } else if !player_in_check(&test_board, player) {
-            board[rme.0][rme.1] = board[rms.0][rms.1];
-            board[rms.0][rms.1] = 0;
-            return true;
+            test_board[rme.0][rme.1] = test_board[end[0]][end[1]];
+            test_board[end[0]][end[1]] = 0;
+            if !player_in_check(&test_board, player) { // can not be in check for middle square
+                board[rme.0][rme.1] = board[rms.0][rms.1];
+                board[rms.0][rms.1] = 0;
+                return true;
+            }
         }
     }
     // normal move
@@ -817,6 +821,16 @@ mod tests {
         board.board[7] = vec![0,0,0,0,-6,0,0,-4];
         assert_eq!(board.update_board(vec![0, 4], vec![0, 2], 0), 0);
         assert_eq!(board.update_board(vec![7, 4], vec![7, 6], 0), 0);
+    }
+
+    #[test]
+    fn legal_castle_move_2() {
+        let mut board = Board::new_board(1);
+        board.board[0] = vec![4,0,0,0,6,3,2,4];
+        board.board[1] = vec![0,0,0,0,0,0,0,0];
+        board.board[6] = vec![0,0,0,0,0,0,0,0];
+        board.board[7] = vec![0,0,0,-5,-6,0,0,-4];
+        assert_eq!(board.update_board(vec![0, 4], vec![0, 2], 0), -2);
     }
 
     #[test]
