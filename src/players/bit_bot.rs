@@ -1,5 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
+use rand::Rng;
+
 pub fn run(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, castle_pieces: &HashSet<(usize,usize)>) -> Vec<usize> {
     // flip board horizontally if player is -1
     let mut new_board = Vec::new();
@@ -53,6 +55,9 @@ pub fn run(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, 
     }
     m
 }
+
+
+
 
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
@@ -255,14 +260,13 @@ fn setup_and_start(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, cast
 }
 
 
-
 fn alpha(bit_board: BitBoard, depth: i32) -> Vec<u64> {
     println!("start score = {}", score(&bit_board)-900);
 
     let mut alpha = -100000;
     let beta = alpha*-1;
     let mut hm = HashMap::new();
-    let alm = all_legal_moves(&bit_board);
+    let alm = shuffle_vec(all_legal_moves(&bit_board));
     let mut bb;
     let mut score;
     let mut best_move = Vec::new();
@@ -281,6 +285,15 @@ fn alpha(bit_board: BitBoard, depth: i32) -> Vec<u64> {
     println!("BitBoard = {:?}", bit_board);
 
     best_move
+}
+
+fn shuffle_vec(mut vec: Vec<Vec<u64>>) -> Vec<Vec<u64>> {
+    let mut rng = rand::thread_rng();
+    for i in 0..vec.len() {
+        let j = rng.gen_range(0..vec.len());
+        vec.swap(i, j);
+    }
+    vec
 }
 
 fn alpha_beta(bit_board: &BitBoard, hm: &mut HashMap<BitBoard, i32>, mut alpha: i32, mut beta: i32, player: i8, depth: i32) -> i32 {
