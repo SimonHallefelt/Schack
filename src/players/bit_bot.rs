@@ -1,4 +1,6 @@
+use core::time;
 use std::collections::{HashMap, HashSet};
+use std::time::Instant;
 
 use rand::Rng;
 
@@ -266,6 +268,7 @@ fn alpha(bit_board: BitBoard, depth: i32) -> Vec<u64> {
     let mut alpha = -100000;
     let beta = alpha*-1;
     let mut hm = HashMap::new();
+    // let alm = all_legal_moves(&bit_board);
     let alm = shuffle_vec(all_legal_moves(&bit_board));
     let mut bb;
     let mut score;
@@ -358,7 +361,7 @@ fn pawn_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> { // dose not look at en pa
     let dir;
     let start_row;
     let my_pieces;
-    let pawns;
+    let mut pawns;
     let opponent_pieces;
 
     if bit_board.player == 1 {
@@ -379,14 +382,11 @@ fn pawn_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> { // dose not look at en pa
         return moves;
     }
 
-    for p in 0..64 {
-        if (1 << p) & pawns == 0 {
-            continue;
-        }
+    let mut p = pawns.trailing_zeros() as i32;
+    while p != 64 {
+        pawns ^= 1 << p;
+
         let mut to = p + dir;
-        if to < 0 || to > 63 {
-            continue;
-        }
         // attack
         let col = p%8;
         let row = p/8;
@@ -424,6 +424,7 @@ fn pawn_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> { // dose not look at en pa
                 }
             }
         }
+        p = pawns.trailing_zeros() as i32;
     }
 
     moves
@@ -433,7 +434,7 @@ fn knight_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> {
     let mut moves = Vec::new();
     let dir = [-17, -15, -10, -6, 6, 10, 15, 17];
     let pieces;
-    let knights;
+    let mut knights;
 
     if bit_board.player == 1 {
         pieces = bit_board.white_pieces;
@@ -443,10 +444,10 @@ fn knight_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> {
         knights = bit_board.black_knights;
     }
 
-    for k in 0..64 {
-        if (1 << k) & knights == 0 {
-            continue;
-        }
+    let mut k = knights.trailing_zeros() as i32;
+    while k != 64 {
+        knights ^= 1 << k;
+
         let col = k%8;
         for d in dir.iter() {
             let to = k as i32 + d;
@@ -459,6 +460,7 @@ fn knight_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> {
             }
             moves.push(vec![1 << k, 1 << to, 2, 0]);
         }
+        k = knights.trailing_zeros() as i32;
     }
 
     moves
@@ -550,17 +552,17 @@ fn king_moves(bit_board: &BitBoard) -> Vec<Vec<u64>> { // dose not look at castl
     moves
 }
 
-fn h_and_v_moves(pieces: u64, my_pieces: u64, opponent_pieces: u64, piece: u64) -> Vec<Vec<u64>> {
+fn h_and_v_moves(mut pieces: u64, my_pieces: u64, opponent_pieces: u64, piece: u64) -> Vec<Vec<u64>> {
     let mut moves = Vec::new();
     let dir1 = [-8, 8];
     let dir2 = [-1, 1];
 
-    for r in 0..64 {
-        if (1 << r) & pieces == 0 {
-            continue;
-        }
+    let mut r = pieces.trailing_zeros() as i32;
+    while r != 64 {
+        pieces ^= 1 << r;
+
         for d in dir1 {
-            let mut to = r as i32 + d;
+            let mut to = r + d;
             while to >= 0 && to < 64 {
                 if (1 << to) & my_pieces != 0 {
                     break;
@@ -574,7 +576,7 @@ fn h_and_v_moves(pieces: u64, my_pieces: u64, opponent_pieces: u64, piece: u64) 
         }
         let row = r/8;
         for d in dir2 {
-            let mut to = r as i32 + d;
+            let mut to = r + d;
             while to >= 0 && to < 64 {
                 if (1 << to) & my_pieces != 0 {
                     break;
@@ -589,23 +591,24 @@ fn h_and_v_moves(pieces: u64, my_pieces: u64, opponent_pieces: u64, piece: u64) 
                 to += d;
             }
         }
+        r = pieces.trailing_zeros() as i32;
     }
 
     moves
 }
 
-fn c_moves(pieces: u64, my_pieces: u64, opponent_pieces: u64, piece: u64) -> Vec<Vec<u64>> {
+fn c_moves(mut pieces: u64, my_pieces: u64, opponent_pieces: u64, piece: u64) -> Vec<Vec<u64>> {
     let mut moves = Vec::new();
     let dir = [-9, -7, 7, 9];
 
-    for b in 0..64 {
-        if (1 << b) & pieces == 0 {
-            continue;
-        }
+    let mut b = pieces.trailing_zeros() as i32;
+    while b != 64 {
+        pieces ^= 1 << b;
+
         let row = b/8;
         let col = b%8;
         for d in dir.iter() {
-            let mut to = b as i32 + d;
+            let mut to = b + d;
             while to >= 0 && to < 64 {
                 if (1 << to) & my_pieces != 0 {
                     break;
@@ -620,6 +623,7 @@ fn c_moves(pieces: u64, my_pieces: u64, opponent_pieces: u64, piece: u64) -> Vec
                 to += d;
             }
         }
+        b = pieces.trailing_zeros() as i32;
     }
 
     moves
@@ -634,13 +638,13 @@ fn score(bit_board: &BitBoard) -> i32 {
     score += piece_score(3) * bit_board.white_bishops.count_ones() as i32;
     score += piece_score(4) * bit_board.white_rooks.count_ones() as i32;
     score += piece_score(5) * bit_board.white_queen.count_ones() as i32;
-    score += piece_score(6) * bit_board.white_king.count_ones() as i32;
+    score += piece_score(6);
     score += piece_score(-1) * bit_board.black_pawns.count_ones() as i32;
     score += piece_score(-2) * bit_board.black_knights.count_ones() as i32;
     score += piece_score(-3) * bit_board.black_bishops.count_ones() as i32;
     score += piece_score(-4) * bit_board.black_rooks.count_ones() as i32;
     score += piece_score(-5) * bit_board.black_queen.count_ones() as i32;
-    score += piece_score(-6) * bit_board.black_king.count_ones() as i32;
+    score += piece_score(-6);
     score
 }
 
