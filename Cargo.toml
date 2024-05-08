@@ -10,6 +10,7 @@ build = "build.rs"
 [dependencies]
 rand = "0.8.4"
 slint = "1.4"
+tch = "0.4.0"
 
 [build-dependencies]
 slint-build = "1.4"

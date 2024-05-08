@@ -1,4 +1,5 @@
-use std::collections::{HashMap, HashSet};
+use std::{fs, collections::{HashMap, HashSet}};
+// use tch;
 
 pub fn run(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, castle_pieces: &HashSet<(usize,usize)>) -> Vec<usize> {
     // flip board horizontally if player is -1
@@ -37,6 +38,9 @@ pub fn run(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, 
         }
     }
 
+    // get score method
+    let score_fn = get_score_model();
+
     // get best move
     let best_move = setup_and_start(&new_board, &new_board_history, &new_castle_pieces); // always player 1
 
@@ -52,6 +56,16 @@ pub fn run(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, 
         m.push(best_move[4]);
     }
     m
+}
+
+
+fn get_score_model() {
+    // read torch model
+    // let model_file = fs::read_to_string("src\\AI\\data\\data.txt").expect("no file found");
+    // let model_file = fs::read_to_string("src\\AI\\models\\model0.pt").expect("no file found");
+    // let model = tch::CModule::load("src\\AI\\models\\model0.pt").expect("model not properly loaded");
+    // let model = tch::CModule::load("src\\AI\\models2\\model0.pt");
+    // let model = tch::CModule::load(model_file).expect("model not properly loaded");
 }
 
 
