@@ -39,7 +39,7 @@ pub fn run(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, player: i8, 
     }
 
     // get score method
-    let score_fn = get_score_model();
+    // let score_fn = get_score_model();
 
     // get best move
     let best_move = setup_and_start(&new_board, &new_board_history, &new_castle_pieces); // always player 1
@@ -629,8 +629,37 @@ fn c_moves(pieces: u64, my_pieces: u64, opponent_pieces: u64, piece: u64) -> Vec
 
 fn score(bit_board: &BitBoard) -> i32 {
     let mut score = 0;
-    
+    score += piece_score(1) * bit_board.white_pawns.count_ones() as i32;
+    score += piece_score(2) * bit_board.white_knights.count_ones() as i32;
+    score += piece_score(3) * bit_board.white_bishops.count_ones() as i32;
+    score += piece_score(4) * bit_board.white_rooks.count_ones() as i32;
+    score += piece_score(5) * bit_board.white_queen.count_ones() as i32;
+    score += piece_score(6) * bit_board.white_king.count_ones() as i32;
+    score += piece_score(-1) * bit_board.black_pawns.count_ones() as i32;
+    score += piece_score(-2) * bit_board.black_knights.count_ones() as i32;
+    score += piece_score(-3) * bit_board.black_bishops.count_ones() as i32;
+    score += piece_score(-4) * bit_board.black_rooks.count_ones() as i32;
+    score += piece_score(-5) * bit_board.black_queen.count_ones() as i32;
+    score += piece_score(-6) * bit_board.black_king.count_ones() as i32;
     score
+}
+
+fn piece_score(piece: i8) -> i32 {
+    match piece {
+        1 => 1,
+        2 => 3,
+        3 => 3,
+        4 => 5,
+        5 => 9,
+        6 => 1000,
+        -1 => -1,
+        -2 => -3,
+        -3 => -3,
+        -4 => -5,
+        -5 => -9,
+        -6 => -100,
+        _ => 0,
+    }
 }
 
 
