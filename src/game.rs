@@ -176,12 +176,20 @@ fn piece_score(piece: i8) -> i32 {
 
 fn add_new_data(result: i8, player_1: u8, player_2: u8, moves: Vec<String>) {
     let massage = format!("{} {} {} {}\n", result, player_1, player_2, moves.join(" "));
-    let mut file = std::fs::OpenOptions::new()
+    let result = std::fs::OpenOptions::new()
         .append(true)
-        .open("src\\AI\\data\\new_raw_data.txt")
-        .unwrap();
-    //write!(file, "{}", massage).unwrap();
-    file.write_all(massage.as_bytes()).unwrap();
+        .open("src\\AI\\data\\new_raw_data.txt");
+    match result {
+        Ok(mut file) => {
+            if let Err(e) = file.write_all(massage.as_bytes()) {
+                eprintln!("Failed to write to file: {}", e);
+            }
+        }
+        Err(e) => {
+            // eprintln!("Failed to open file: {}", e);
+        }
+    }
+    
 }
 
 #[cfg(test)]
