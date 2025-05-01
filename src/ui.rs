@@ -104,19 +104,11 @@ fn get_piece_name(num: i8) -> String {
 
 fn board_clicked(ui_weak: slint::Weak<appWindow>, game: Arc<Mutex<Game>>, num: usize) {
     let ui = ui_weak.upgrade().unwrap();
-    let p = num_to_pos(num);
-    let mut clicked = vec![];
-    for i in (0..8).rev() {
-        for j in 0..8 {
-            if i == p[0] && j == p[1] {
-                clicked.push(true);
-            } else {
-                clicked.push(false);
-            }
-        }
-    }
+    let mut clicked = vec![false; 64];
+    clicked[num] = true;
     ui.set_square_clicked(ModelRc::new(VecModel::from(clicked)));
     let mut g = game.lock().unwrap();
+    let p = num_to_pos(num);
     g.clicked(p);
 }
 

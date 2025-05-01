@@ -23,7 +23,7 @@ pub fn get_all_legal_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>
 }
 
 fn get_legal_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, start: (usize, usize), player: i8, ll: bool, castle_pieces: &HashSet<(usize,usize)>) -> Vec<Vec<usize>> {
-    let legal_moves = match board[start.0][start.1].abs() {
+    match board[start.0][start.1].abs() {
         6 => legal_king_moves(board, start, player, ll, castle_pieces),
         5 => legal_queen_moves(board, start, player, ll),
         4 => legal_rook_moves(board, start, player, ll),
@@ -31,9 +31,7 @@ fn get_legal_moves(board: &Vec<Vec<i8>>, board_history: &Vec<Vec<Vec<i8>>>, star
         2 => legal_knight_moves(board, start, player, ll),
         1 => legal_pawn_moves(board, board_history, start, player, ll),
         _ => Vec::new()
-    };
-
-    legal_moves
+    }
 }
 
 fn legal_king_moves(board: &Vec<Vec<i8>>, start: (usize, usize), player: i8, ll: bool, castle_pieces: &HashSet<(usize,usize)>) -> Vec<Vec<usize>> {
